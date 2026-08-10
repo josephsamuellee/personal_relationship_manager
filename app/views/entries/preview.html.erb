@@ -1,0 +1,70 @@
+<h1><%= @entry ? "Edit Entry" : "Preview Entry" %></h1>
+
+<% if @draft.validation_errors.any? %>
+  <div class="validation-errors">
+    <ul>
+      <% @draft.validation_errors.each do |error| %>
+        <li><%= error %></li>
+      <% end %>
+    </ul>
+  </div>
+<% end %>
+
+<% @draft.unresolved_people.each do |item| %>
+  <div class="resolution-panel">
+    <% if item[:result].unknown? %>
+      <p>No person named "<%= item[:name] %>" exists.</p>
+      <%= button_to "Create #{item[:name]}", create_person_entries_path, method: :post, params: { name: item[:name] } %>
+    <% elsif item[:result].ambiguous? %>
+      <p>"<%= item[:name] %>" matches multiple people.</p>
+      <ul>
+        <% item[:result].people.each do |person| %>
+          <li>
+            <%= button_to person.name, resolve_person_entries_path, method: :post, params: { name: item[:name], person_id: person.id } %>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
+  </div>
+<% end %>
+
+<div class="preview-card">
+  <p><strong>Title:</strong> <%= @draft.title %></p>
+  <p><strong>Date:</strong> <%= @draft.occurred_on %></p>
+  <p><strong>Primary:</strong> <%= @draft.primary_person&.name %></p>
+  <p><strong>Referenced:</strong> <%= @draft.secondary_people.map(&:name).join(", ") %></p>
+  <p><strong>Tags:</strong> <%= @draft.parsed_tags.join(", ") %></p>
+
+  <% if @entry && @relationship_diff&.changed? %>
+    <div class="relationship-diff">
+      <h3>Relationship Changes</h3>
+      <% diff = @relationship_diff.changes %>
+      <% if diff.primary_from != diff.primary_to %>
+        <p>Primary: <%= diff.primary_from %> → <%= diff.primary_to %></p>
+      <% end %>
+      <% if diff.removed.any? %>
+        <p>Removed references:</p>
+        <ul><% diff.removed.each { |name| %><li>- <%= name %></li><% } %></ul>
+      <% end %>
+      <% if diff.added.any? %>
+        <p>Added references:</p>
+        <ul><% diff.added.each { |name| %><li>+ <%= name %></li><% } %></ul>
+      <% end %>
+    </div>
+  <% end %>
+
+  <div class="preview-markdown">
+    <h3>Preview</h3>
+    <%= render_markdown(@draft.body_markdown) %>
+  </div>
+</div>
+
+<% if @draft.valid_for_save? %>
+  <% if @entry %>
+    <%= button_to "Save", entry_path(@entry), method: :patch %>
+  <% else %>
+    <%= button_to "Save", entries_path, method: :post %>
+  <% end %>
+<% end %>
+
+<%= link_to "Edit Entry", @entry ? edit_entry_path(@entry) : new_entry_path %>

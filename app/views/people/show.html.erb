@@ -1,0 +1,63 @@
+<div class="person-page" data-controller="person-timeline entry-overlay">
+  <header class="person-header">
+    <h1><%= @person.name %></h1>
+  </header>
+
+  <section class="person-section">
+    <h2>Timeline</h2>
+    <div class="timeline-container" data-person-timeline-target="container">
+      <div class="timeline-axis" data-person-timeline-target="axis"></div>
+      <div class="timeline-nodes" data-person-timeline-target="nodes"></div>
+    </div>
+    <script type="application/json" data-person-timeline-target="data">
+      <%= raw @timeline_entries.map { |entry|
+        {
+          id: entry.id,
+          title: entry.title,
+          occurred_on: entry.occurred_on.iso8601,
+          primary: entry.primary_for?(@person),
+          url: entry_path(entry)
+        }
+      }.to_json %>
+    </script>
+  </section>
+
+  <section class="person-section" data-controller="about-editor">
+    <h2>About</h2>
+    <%= form_with model: @person, url: person_path(@person), method: :patch, class: "about-form" do |form| %>
+      <div data-about-editor-target="editor">
+        <%= form.text_area :about_markdown, rows: 8, class: "about-textarea", data: { about_editor_target: "textarea" } %>
+      </div>
+      <div class="about-preview hidden" data-about-editor-target="preview">
+        <%= render_markdown(@person.about_markdown) %>
+      </div>
+      <div class="form-actions">
+        <button type="button" data-action="about-editor#togglePreview">Preview</button>
+        <%= form.submit "Save About" %>
+      </div>
+    <% end %>
+  </section>
+
+  <section class="person-section">
+    <h2>Recent Entries</h2>
+    <ul class="entry-list">
+      <% @recent_entries.each do |entry| %>
+        <li class="<%= entry.primary_for?(@person) ? 'entry-primary' : 'entry-secondary' %>">
+          <%= link_to "#{entry.occurred_on}: #{entry.title}", entry_path(entry) %>
+        </li>
+      <% end %>
+    </ul>
+  </section>
+
+  <section class="person-section">
+    <h2>Photos</h2>
+    <p class="placeholder">Photo uploads are planned for a future release.</p>
+  </section>
+
+  <div class="entry-overlay hidden" data-entry-overlay-target="overlay" data-action="click->entry-overlay#closeOnBackdrop">
+    <div class="entry-overlay-content" data-entry-overlay-target="content">
+      <button type="button" class="overlay-close" data-action="entry-overlay#close" aria-label="Close">&times;</button>
+      <div data-entry-overlay-target="body"></div>
+    </div>
+  </div>
+</div>

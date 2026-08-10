@@ -1,0 +1,10 @@
+<div class="floating-controls" data-controller="search-expand">
+  <div class="floating-search">
+    <button type="button" class="floating-button" data-action="search-expand#toggle" aria-label="Search">Search</button>
+    <form action="<%= search_path %>" method="get" class="search-form hidden" data-search-expand-target="form">
+      <input type="search" name="q" placeholder="Search people, dates, entries..." data-search-expand-target="input" aria-label="Search query">
+    </form>
+  </div>
+
+  <%= link_to "Add Entry", new_entry_path, class: "floating-button floating-add" %>
+</div>

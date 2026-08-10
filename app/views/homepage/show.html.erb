@@ -1,0 +1,68 @@
+<div class="homepage">
+  <h1>Homepage</h1>
+
+  <section class="homepage-section">
+    <h2>Recent Timeline</h2>
+    <div class="recent-timeline">
+      <% @presenter.recent_timeline_dates.each do |date| %>
+        <% entries = @presenter.recent_timeline_entries[date] || [] %>
+        <div class="recent-timeline-row">
+          <span class="recent-timeline-day"><%= @presenter.weekday_letter(date) %></span>
+          <span class="recent-timeline-content">
+            <% if entries.any? %>
+              <%= safe_join(entries.map { |entry| link_to(entry.title, entry_path(entry)) }, ", ") %>
+            <% end %>
+          </span>
+        </div>
+      <% end %>
+    </div>
+  </section>
+
+  <section class="homepage-section">
+    <h2>Upcoming Calendar</h2>
+    <% if @calendar.available? %>
+      <iframe src="<%= @calendar.embed_url %>" class="calendar-embed" title="Google Calendar" loading="lazy"></iframe>
+    <% else %>
+      <p class="calendar-unavailable">Calendar unavailable</p>
+    <% end %>
+  </section>
+
+  <section class="homepage-section split-view">
+    <div class="split-panel">
+      <h2>TODO</h2>
+      <p class="placeholder">Reminder and TODO features are coming later.</p>
+    </div>
+    <div class="split-panel">
+      <h2>Three-Month Lookback</h2>
+      <% window = @presenter.historical_window %>
+      <p class="window-range"><%= window[:start_date] %> to <%= window[:end_date] %></p>
+      <ul class="entry-list">
+        <% @presenter.historical_entries.each do |entry| %>
+          <li><%= link_to "#{entry.occurred_on}: #{entry.title}", entry_path(entry) %></li>
+        <% end %>
+      </ul>
+    </div>
+  </section>
+
+  <section class="homepage-section random-reminders">
+    <h2>Random Reminders</h2>
+    <div class="random-grid">
+      <div>
+        <h3>People</h3>
+        <ul>
+          <% @presenter.random_people.each do |person| %>
+            <li><%= link_to person.name, person_path(person) %></li>
+          <% end %>
+        </ul>
+      </div>
+      <div>
+        <h3>Entries</h3>
+        <ul>
+          <% @presenter.random_entries.each do |entry| %>
+            <li><%= link_to entry.title, entry_path(entry) %></li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+  </section>
+</div>
