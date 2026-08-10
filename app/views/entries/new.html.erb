@@ -1,0 +1,22 @@
+<h1>New Entry</h1>
+
+<%= form_with url: preview_entries_path, method: :post, class: "entry-form", data: { controller: "entry-date" } do |form| %>
+  <div class="field">
+    <%= label_tag :entry_title, "Title" %>
+    <%= text_field_tag "entry[title]", @draft.title, required: true %>
+  </div>
+
+  <div class="field">
+    <%= label_tag :entry_raw_date, "Occurred On" %>
+    <%= text_field_tag "entry[raw_date]", @draft.raw_date, required: true, data: { entry_date_target: "input" } %>
+    <button type="button" data-action="entry-date#useToday">Use today</button>
+  </div>
+
+  <div class="field">
+    <%= label_tag :entry_body_markdown, "Markdown Body" %>
+    <%= text_area_tag "entry[body_markdown]", @draft.body_markdown, rows: 12, required: true %>
+    <p class="hint">Use [[Person Name]] for people and #tag for tags.</p>
+  </div>
+
+  <%= submit_tag "Preview" %>
+<% end %>

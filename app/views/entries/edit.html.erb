@@ -1,0 +1,23 @@
+<h1>Edit Entry</h1>
+
+<%= form_with url: preview_entry_path(@entry), method: :post, class: "entry-form", data: { controller: "entry-date" } do |form| %>
+  <%= hidden_field_tag "entry[entry_id]", @entry.id %>
+
+  <div class="field">
+    <%= label_tag :entry_title, "Title" %>
+    <%= text_field_tag "entry[title]", @draft.title, required: true %>
+  </div>
+
+  <div class="field">
+    <%= label_tag :entry_raw_date, "Occurred On" %>
+    <%= text_field_tag "entry[raw_date]", @draft.raw_date, required: true, data: { entry_date_target: "input" } %>
+    <button type="button" data-action="entry-date#useToday">Use today</button>
+  </div>
+
+  <div class="field">
+    <%= label_tag :entry_body_markdown, "Markdown Body" %>
+    <%= text_area_tag "entry[body_markdown]", @draft.body_markdown, rows: 12, required: true %>
+  </div>
+
+  <%= submit_tag "Preview" %>
+<% end %>

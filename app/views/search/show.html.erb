@@ -1,0 +1,35 @@
+<h1>Search</h1>
+
+<%= form_with url: search_path, method: :get, class: "search-page-form" do %>
+  <%= text_field_tag :q, @query, placeholder: "Search..." %>
+  <%= submit_tag "Search" %>
+<% end %>
+
+<% if @query.present? %>
+  <section>
+    <h2>People</h2>
+    <ul>
+      <% @results[:people].each do |person| %>
+        <li><%= link_to person.name, person_path(person) %></li>
+      <% end %>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Timeline / Date</h2>
+    <ul>
+      <% @results[:timeline].each do |entry| %>
+        <li><%= link_to "#{entry.occurred_on}: #{entry.title}", entry_path(entry) %></li>
+      <% end %>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Entries</h2>
+    <ul>
+      <% @results[:entries].each do |entry| %>
+        <li><%= link_to entry.title, entry_path(entry) %></li>
+      <% end %>
+    </ul>
+  </section>
+<% end %>

@@ -1,0 +1,17 @@
+services:
+  web:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      RAILS_ENV: production
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+      APP_TIME_ZONE: ${APP_TIME_ZONE:-America/Los_Angeles}
+      DATABASE_PATH: /data/production.sqlite3
+      GOOGLE_CALENDAR_EMBED_URL: ${GOOGLE_CALENDAR_EMBED_URL:-}
+    volumes:
+      - prm_data:/data
+    restart: unless-stopped
+
+volumes:
+  prm_data:

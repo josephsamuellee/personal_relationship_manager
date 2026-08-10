@@ -1,0 +1,19 @@
+<div class="entry-detail">
+  <h1><%= @entry.title %></h1>
+  <p><strong>Date:</strong> <%= @entry.occurred_on %></p>
+  <p><strong>Primary:</strong> <%= link_to @entry.primary_person.name, person_path(@entry.primary_person) %></p>
+  <% if @entry.secondary_people.any? %>
+    <p><strong>Referenced:</strong>
+      <%= safe_join(@entry.secondary_people.map { |person| link_to(person.name, person_path(person)) }, ", ") %>
+    </p>
+  <% end %>
+  <% if @entry.tags.any? %>
+    <p><strong>Tags:</strong> <%= @entry.tags.map(&:name).join(", ") %></p>
+  <% end %>
+
+  <div class="entry-body">
+    <%= render_markdown(@entry.body_markdown) %>
+  </div>
+
+  <p><%= link_to "Edit", edit_entry_path(@entry) %></p>
+</div>

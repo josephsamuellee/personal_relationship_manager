@@ -1,0 +1,13 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  title: MyString
+  occurred_on: 2026-08-09
+  body_markdown: MyText
+  primary_person: one
+
+two:
+  title: MyString
+  occurred_on: 2026-08-09
+  body_markdown: MyText
+  primary_person: two
