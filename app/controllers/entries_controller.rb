@@ -2,7 +2,11 @@ class EntriesController < ApplicationController
   before_action :set_entry, only: [:show, :edit, :update, :create_preview_update]
 
   def new
-    @draft = EntryDraft.new(raw_date: Time.zone.today.strftime("%d %b %Y"))
+    @draft = if session[:entry_draft]
+      EntryDraft.from_session(session[:entry_draft])
+    else
+      EntryDraft.new(raw_date: Time.zone.today.strftime("%d %b %Y"))
+    end
   end
 
   def create

@@ -59,4 +59,21 @@ class EntryTest < ActiveSupport::TestCase
     assert_equal @sarah, updated.primary_person
     assert_equal [@sarah], updated.people
   end
+
+  test "from_session re-resolves people after person selections change" do
+    draft = EntryDraft.from_params(
+      title: "Dinner",
+      raw_date: "09 Aug 2026",
+      body_markdown: "Dinner with [[New Person]] and [[Another Person]]"
+    )
+    session_data = draft.to_session
+    assert_equal 2, draft.unresolved_people.size
+
+    session_data["person_selections"] = { "New Person" => @andrew.id, "Another Person" => @sarah.id }
+    reloaded = EntryDraft.from_session(session_data)
+
+    assert reloaded.valid_for_save?
+    assert_empty reloaded.unresolved_people
+    assert_equal [@andrew.id, @sarah.id], reloaded.resolved_people_ids
+  end
 end
