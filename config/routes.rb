@@ -13,7 +13,7 @@ Rails.application.routes.draw do
       post :resolve_person
       post :create_person
       get :drafts
-      delete :draft, action: :discard_draft
+      delete :draft, action: :discard_draft, as: :discard_draft
     end
 
     member do
