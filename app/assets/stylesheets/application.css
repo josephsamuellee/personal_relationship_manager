@@ -24,7 +24,7 @@ body.app-body {
 .main-content {
   max-width: 960px;
   margin: 0 auto;
-  padding: 1.5rem 1.5rem 5rem;
+  padding: 3.5rem 1.5rem 5rem;
 }
 
 h1, h2, h3 { margin-top: 0; }
@@ -288,18 +288,29 @@ h1, h2, h3 { margin-top: 0; }
 
 .hidden { display: none !important; }
 
-/* Floating controls */
-.floating-controls {
+/* Top navigation */
+.nav-home {
   position: fixed;
-  bottom: 1rem;
-  left: 0;
-  right: 0;
-  pointer-events: none;
+  top: 1rem;
+  right: 1rem;
   z-index: 100;
+  padding: 0.5rem 1rem;
+  background: white;
+  color: var(--accent);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 0.9rem;
+  text-decoration: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
+.nav-home:hover {
+  background: var(--accent-light);
+}
+
+/* Floating controls */
 .floating-button {
-  pointer-events: auto;
+  display: inline-block;
   padding: 0.75rem 1.25rem;
   background: var(--accent);
   color: white;
@@ -309,35 +320,37 @@ h1, h2, h3 { margin-top: 0; }
   cursor: pointer;
   text-decoration: none;
   box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-}
-
-.floating-add {
-  position: static;
-}
-
-.floating-draft {
-  background: #e67e22;
-}
-
-.floating-actions {
-  position: fixed;
-  bottom: 1rem;
-  right: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  align-items: flex-end;
-  pointer-events: auto;
+  white-space: nowrap;
 }
 
 .floating-search {
   position: fixed;
   bottom: 1rem;
   left: 1rem;
+  z-index: 100;
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  pointer-events: auto;
+}
+
+.floating-actions {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  left: auto;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-end;
+}
+
+.floating-draft {
+  background: #e67e22;
+}
+
+.floating-add {
+  background: var(--accent);
 }
 
 .search-form {
