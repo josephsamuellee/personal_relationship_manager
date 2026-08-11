@@ -189,6 +189,83 @@ h1, h2, h3 { margin-top: 0; }
   margin-bottom: 1rem;
 }
 
+.preview-status {
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.preview-status-ready {
+  background: var(--flash-notice);
+}
+
+.preview-status-needs-attention {
+  background: #fff8e6;
+  border: 1px solid #e6d9a8;
+}
+
+.preview-status-list {
+  margin: 0.5rem 0 0;
+  padding-left: 1.25rem;
+}
+
+.preview-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.button-primary,
+.button-secondary,
+.button-danger {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.button-primary {
+  background: var(--accent);
+  color: white;
+}
+
+.button-secondary {
+  background: white;
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.button-danger {
+  background: white;
+  color: #a94442;
+  border-color: #e8b4b4;
+}
+
+.resolution-options {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.draft-snippet {
+  color: var(--muted);
+  font-style: italic;
+}
+
+.floating-draft {
+  position: fixed;
+  bottom: 1rem;
+  right: 8rem;
+  background: var(--secondary);
+}
+
 .resolution-panel {
   background: var(--accent-light);
   padding: 1rem;

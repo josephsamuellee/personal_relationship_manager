@@ -1,5 +1,5 @@
 class EntriesController < ApplicationController
-  before_action :set_entry, only: [:show, :edit, :update, :preview_update]
+  before_action :set_entry, only: [:show, :edit, :update, :create_preview_update]
 
   def new
     @draft = EntryDraft.new(raw_date: Time.zone.today.strftime("%d %b %Y"))
@@ -11,18 +11,34 @@ class EntriesController < ApplicationController
       entry = EntrySaver.save!(draft)
       session.delete(:entry_draft)
       redirect_to entry_path(entry), notice: "Entry saved."
+    elsif draft
+      redirect_to preview_entries_path, alert: "Could not save entry. Please resolve the issues below."
     else
-      redirect_to new_entry_path, alert: "Could not save entry. Please preview again."
+      redirect_to new_entry_path, alert: "No draft found. Please create and preview an entry first."
     end
   end
 
-  def preview
+  def show_preview
+    draft = load_draft_from_session
+    unless draft
+      redirect_to new_entry_path, alert: "No draft to preview. Start a new entry."
+      return
+    end
+
+    assign_preview_variables(draft)
+    render :preview
+  end
+
+  def create_preview
     draft = EntryDraft.from_params(entry_params)
     session[:entry_draft] = draft.to_session
-    @draft = draft
-    @entry = Entry.find_by(id: draft.entry_id) if draft.entry_id.present?
-    @relationship_diff = EntryRelationshipDiff.new(@entry, draft) if @entry
-    render :preview
+    redirect_to preview_entries_path, notice: preview_notice_for(draft)
+  end
+
+  def create_preview_update
+    draft = EntryDraft.from_params(entry_params.merge(entry_id: @entry.id))
+    session[:entry_draft] = draft.to_session
+    redirect_to preview_entries_path, notice: preview_notice_for(draft)
   end
 
   def show
@@ -38,22 +54,16 @@ class EntriesController < ApplicationController
     @draft.parse!
   end
 
-  def preview_update
-    draft = EntryDraft.from_params(entry_params.merge(entry_id: @entry.id))
-    session[:entry_draft] = draft.to_session
-    @draft = draft
-    @relationship_diff = EntryRelationshipDiff.new(@entry, draft)
-    render :preview
-  end
-
   def update
     draft = load_draft_from_session
     if draft&.valid_for_save? && draft.entry_id.to_i == @entry.id
       entry = EntrySaver.save!(draft)
       session.delete(:entry_draft)
       redirect_to entry_path(entry), notice: "Entry updated."
+    elsif draft
+      redirect_to preview_entries_path, alert: "Could not update entry. Please resolve the issues below."
     else
-      redirect_to edit_entry_path(@entry), alert: "Could not update entry. Please preview again."
+      redirect_to edit_entry_path(@entry), alert: "No draft found. Please preview your changes first."
     end
   end
 
@@ -65,9 +75,7 @@ class EntriesController < ApplicationController
 
     draft = EntryDraft.from_session(draft_data)
     session[:entry_draft] = draft.to_session
-    @draft = draft
-    @entry = Entry.find_by(id: draft.entry_id)
-    render :preview
+    redirect_to preview_entries_path, notice: "Selected #{params[:name]}."
   end
 
   def create_person
@@ -79,9 +87,16 @@ class EntriesController < ApplicationController
 
     draft = EntryDraft.from_session(draft_data)
     session[:entry_draft] = draft.to_session
-    @draft = draft
-    @entry = Entry.find_by(id: draft.entry_id)
-    render :preview
+    redirect_to preview_entries_path, notice: "Created and linked #{person.name}."
+  end
+
+  def drafts
+    @draft = load_draft_from_session
+  end
+
+  def discard_draft
+    session.delete(:entry_draft)
+    redirect_to new_entry_path, notice: "Draft discarded."
   end
 
   private
@@ -98,5 +113,22 @@ class EntriesController < ApplicationController
     return unless session[:entry_draft]
 
     EntryDraft.from_session(session[:entry_draft])
+  end
+
+  def assign_preview_variables(draft)
+    @draft = draft
+    @entry = Entry.find_by(id: draft.entry_id) if draft.entry_id.present?
+    @relationship_diff = EntryRelationshipDiff.new(@entry, draft) if @entry
+  end
+
+  def preview_notice_for(draft)
+    if draft.valid_for_save?
+      "Draft saved. Everything looks good — click Save below when ready."
+    elsif draft.unresolved_people.any?
+      count = draft.unresolved_people.size
+      "Draft saved. #{count} #{'person'.pluralize(count)} need#{'s' if count == 1} your attention below."
+    else
+      "Draft saved. Please fix the issues below before saving."
+    end
   end
 end

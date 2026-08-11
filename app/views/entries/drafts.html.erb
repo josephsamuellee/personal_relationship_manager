@@ -1,0 +1,30 @@
+<h1>Drafts</h1>
+
+<% if @draft %>
+  <div class="preview-status <%= @draft.valid_for_save? ? 'preview-status-ready' : 'preview-status-needs-attention' %>">
+    <% if @draft.valid_for_save? %>
+      <p><strong>Ready to save.</strong> This draft can be published as an entry.</p>
+    <% else %>
+      <p><strong>Needs attention.</strong> This draft has unresolved issues.</p>
+      <% if @draft.unresolved_people.any? %>
+        <p class="hint">Unresolved: <%= @draft.unresolved_people.map { |item| item[:name] }.join(", ") %></p>
+      <% end %>
+    <% end %>
+  </div>
+
+  <div class="preview-card">
+    <p><strong>Title:</strong> <%= @draft.title.presence || "(untitled)" %></p>
+    <p><strong>Date:</strong> <%= @draft.occurred_on || @draft.raw_date || "—" %></p>
+    <p><strong>People:</strong> <%= @draft.parsed_people.join(", ").presence || "—" %></p>
+    <p class="draft-snippet"><%= truncate(@draft.body_markdown.to_s, length: 200) %></p>
+  </div>
+
+  <div class="preview-actions">
+    <%= link_to "Continue preview", preview_entries_path, class: "button-primary" %>
+    <%= link_to "Edit entry", @draft.entry_id.present? ? edit_entry_path(@draft.entry_id) : new_entry_path, class: "button-secondary" %>
+    <%= button_to "Discard draft", discard_draft_entries_path, method: :delete, class: "button-danger", form: { data: { turbo_confirm: "Discard this draft?" } } %>
+  </div>
+<% else %>
+  <p class="hint">No draft in progress. Drafts are saved automatically when you preview a new or edited entry.</p>
+  <%= link_to "New entry", new_entry_path, class: "button-primary" %>
+<% end %>
