@@ -21,22 +21,26 @@
     <% if item[:result].unknown? %>
       <p>No person named "<%= item[:name] %>" exists.</p>
       <% if item[:suggestions].any? %>
-        <p><strong>Did you mean:</strong></p>
+        <p><strong>Did you mean:</strong> <%= item[:suggestions].map(&:name).join(", ") %></p>
         <ul class="resolution-options">
           <% item[:suggestions].each do |person| %>
             <li>
-              <%= button_to "Replace \"#{item[:name]}\" with \"#{person.name}\"", replace_person_name_entries_path, method: :post, params: { name: item[:name], replacement: person.name }, form: { data: { turbo: false } } %>
+              <%= button_to "Change all to #{person.name}", replace_person_name_entries_path, method: :post, params: { name: item[:name], replacement: person.name }, form: { data: { turbo: false } } %>
             </li>
           <% end %>
+          <li>
+            <%= button_to "Create #{item[:name]}", create_person_entries_path, method: :post, params: { name: item[:name] }, form: { data: { turbo: false } } %>
+          </li>
         </ul>
+      <% else %>
+        <%= button_to "Create #{item[:name]}", create_person_entries_path, method: :post, params: { name: item[:name] }, form: { data: { turbo: false } } %>
       <% end %>
-      <%= button_to "Create #{item[:name]}", create_person_entries_path, method: :post, params: { name: item[:name] }, form: { data: { turbo: false } } %>
     <% elsif item[:result].ambiguous? %>
-      <p>"<%= item[:name] %>" matches multiple people. Pick one:</p>
+      <p>"<%= item[:name] %>" matches multiple people. Pick which person you meant:</p>
       <ul class="resolution-options">
         <% item[:result].people.each do |person| %>
           <li>
-            <%= button_to person.name, resolve_person_entries_path, method: :post, params: { name: item[:name], person_id: person.id }, form: { data: { turbo: false } } %>
+            <%= button_to "Use #{person.name}", resolve_person_entries_path, method: :post, params: { name: item[:name], person_id: person.id }, form: { data: { turbo: false } } %>
           </li>
         <% end %>
       </ul>
@@ -68,6 +72,11 @@
       <% end %>
     </div>
   <% end %>
+
+  <div class="preview-draft-body">
+    <h3>Draft body</h3>
+    <pre class="draft-markdown"><%= @draft.body_markdown %></pre>
+  </div>
 
   <div class="preview-markdown">
     <h3>Rendered preview</h3>

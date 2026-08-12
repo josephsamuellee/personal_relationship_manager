@@ -13,11 +13,11 @@ class PersonResolverTest < ActiveSupport::TestCase
     assert_equal @andrew, result.people.first
   end
 
-  test "ambiguous match when multiple prefix matches" do
+  test "unknown when no exact match even with similar names" do
     Person.where(name: "Andrew").delete_all
     result = PersonResolver.resolve("Andrew")
-    assert result.ambiguous?
-    assert_operator result.people.size, :>=, 2
+    assert result.unknown?
+    assert_operator PersonResolver.suggest("Andrew").size, :>=, 2
   end
 
   test "unknown person" do

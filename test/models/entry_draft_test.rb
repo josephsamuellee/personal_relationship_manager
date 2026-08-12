@@ -27,6 +27,7 @@ class EntryDraftTest < ActiveSupport::TestCase
     )
     draft.parse!
     assert draft.unresolved_people.any?
+    assert_not draft.valid_for_save?
 
     draft.replace_person_link!("foobra", "Foobar")
 
@@ -35,5 +36,17 @@ class EntryDraftTest < ActiveSupport::TestCase
     assert draft.unresolved_people.empty?
     assert draft.valid_for_save?
     assert_equal @person.id, draft.resolved_people_ids.first
+  end
+
+  test "partial name match stays unresolved until user confirms" do
+    draft = EntryDraft.new(
+      title: "Test",
+      raw_date: "11 Aug 2026",
+      body_markdown: "Met with [[foobra]] today."
+    )
+    draft.parse!
+
+    assert_nil draft.resolved_people_ids.first
+    assert draft.unresolved_people.any?
   end
 end

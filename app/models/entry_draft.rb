@@ -90,6 +90,14 @@ class EntryDraft
     selections.delete(old_name)
     self.person_selections = selections
     parse!
+
+    # #region agent log
+    File.open("/Users/josephlee/Documents/personal_relationship_manager/.cursor/debug-ff4759.log", "a") do |f|
+      f.puts({ sessionId: "ff4759", runId: "post-fix", hypothesisId: "C", location: "entry_draft.rb:replace_person_link!", message: "rewrote wiki links in draft body", data: { old_name: old_name, new_name: new_name, body_markdown: body_markdown, parsed_people: parsed_people }, timestamp: (Time.now.to_f * 1000).to_i }.to_json)
+    end
+    # #endregion
+
+    self
   end
 
   def valid_for_save?

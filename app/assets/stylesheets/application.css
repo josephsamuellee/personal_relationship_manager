@@ -286,6 +286,17 @@ h1, h2, h3 { margin-top: 0; }
   margin-top: 1rem;
 }
 
+.draft-markdown {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.9rem;
+}
+
 .hidden { display: none !important; }
 
 /* Top navigation */
