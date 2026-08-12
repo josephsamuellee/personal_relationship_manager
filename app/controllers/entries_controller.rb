@@ -49,13 +49,17 @@ class EntriesController < ApplicationController
   end
 
   def edit
-    @draft = EntryDraft.new(
-      title: @entry.title,
-      raw_date: @entry.occurred_on.strftime("%d %b %Y"),
-      body_markdown: @entry.body_markdown,
-      entry_id: @entry.id
-    )
-    @draft.parse!
+    if session[:entry_draft] && session[:entry_draft]["entry_id"].to_i == @entry.id
+      @draft = EntryDraft.from_session(session[:entry_draft])
+    else
+      @draft = EntryDraft.new(
+        title: @entry.title,
+        raw_date: @entry.occurred_on.strftime("%d %b %Y"),
+        body_markdown: @entry.body_markdown,
+        entry_id: @entry.id
+      )
+      @draft.parse!
+    end
   end
 
   def update
@@ -92,6 +96,22 @@ class EntriesController < ApplicationController
     draft = EntryDraft.from_session(draft_data)
     session[:entry_draft] = draft.to_session
     redirect_to preview_entries_path, notice: "Created and linked #{person.name}."
+  end
+
+  def replace_person_name
+    draft_data = session[:entry_draft]
+    unless draft_data
+      redirect_to new_entry_path, alert: "No draft found."
+      return
+    end
+
+    old_name = params[:name]
+    new_name = params[:replacement]
+    draft = EntryDraft.from_session(draft_data)
+    draft.replace_person_link!(old_name, new_name)
+    session[:entry_draft] = draft.to_session
+
+    redirect_to preview_entries_path, notice: "Changed all \"#{old_name}\" to \"#{new_name}\"."
   end
 
   def drafts

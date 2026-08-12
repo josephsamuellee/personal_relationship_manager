@@ -77,8 +77,20 @@ class EntryDraft
       next if resolved_people_ids[index].present?
 
       result = PersonResolver.resolve(selections[name] || name)
-      { name: name, index: index, result: result }
+      item = { name: name, index: index, result: result }
+      item[:suggestions] = PersonResolver.suggest(name) if result.unknown?
+      item
     end
+  end
+
+  def replace_person_link!(old_name, new_name)
+    pattern = /\[\[#{Regexp.escape(old_name)}\]\]/
+    self.body_markdown = body_markdown.gsub(pattern, "[[#{new_name}]]")
+    selections = (person_selections || {}).stringify_keys
+    selections.delete(old_name)
+    self.person_selections = selections
+    parse!
+    self
   end
 
   def valid_for_save?
