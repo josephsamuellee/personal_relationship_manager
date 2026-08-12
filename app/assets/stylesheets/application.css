@@ -288,26 +288,6 @@ h1, h2, h3 { margin-top: 0; }
 
 .hidden { display: none !important; }
 
-/* Top navigation */
-.nav-home {
-  position: fixed;
-  top: 1rem;
-  right: 1rem;
-  z-index: 100;
-  padding: 0.5rem 1rem;
-  background: white;
-  color: var(--accent);
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  font-size: 0.9rem;
-  text-decoration: none;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-
-.nav-home:hover {
-  background: var(--accent-light);
-}
-
 /* Floating controls */
 .floating-button {
   display: inline-block;
@@ -321,6 +301,13 @@ h1, h2, h3 { margin-top: 0; }
   text-decoration: none;
   box-shadow: 0 2px 8px rgba(0,0,0,0.15);
   white-space: nowrap;
+}
+
+.floating-nav-top {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 100;
 }
 
 .floating-search {
@@ -337,20 +324,11 @@ h1, h2, h3 { margin-top: 0; }
   position: fixed;
   bottom: 1rem;
   right: 1rem;
-  left: auto;
   z-index: 100;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   align-items: flex-end;
-}
-
-.floating-draft {
-  background: #e67e22;
-}
-
-.floating-add {
-  background: var(--accent);
 }
 
 .search-form {
