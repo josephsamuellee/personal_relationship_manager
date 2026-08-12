@@ -5,9 +5,18 @@ if [ -z "${LD_PRELOAD+x}" ] && [ -f /usr/lib/*/libjemalloc.so.2 ]; then
   export LD_PRELOAD="$(echo /usr/lib/*/libjemalloc.so.2)"
 fi
 
-# If running the rails server then create or migrate existing database
-if [ "${1}" == "./bin/rails" ] && [ "${2}" == "server" ]; then
+prepare_database() {
   ./bin/rails db:prepare
+}
+
+if [ "${RUN_DB_PREPARE:-1}" != "0" ]; then
+  case "$1" in
+    ./bin/rails|bin/rails)
+      if [ "${2}" = "server" ]; then
+        prepare_database
+      fi
+      ;;
+  esac
 fi
 
-exec "${@}"
+exec "$@"

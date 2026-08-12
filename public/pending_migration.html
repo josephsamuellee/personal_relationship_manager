@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Database update required</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    :root {
+      --bg: #faf9f7;
+      --text: #1a1a1a;
+      --muted: #666;
+      --accent: #2c5f7a;
+      --warning: #fff8e6;
+      --warning-border: #e6d9a8;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    main {
+      max-width: 640px;
+      margin: 4rem auto;
+      padding: 0 1.5rem;
+    }
+
+    .card {
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 1.5rem;
+    }
+
+    .notice {
+      background: var(--warning);
+      border: 1px solid var(--warning-border);
+      border-radius: 6px;
+      padding: 1rem;
+      margin: 1rem 0;
+    }
+
+    code, pre {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      background: #f4f4f4;
+      border-radius: 4px;
+    }
+
+    code {
+      padding: 0.1rem 0.35rem;
+    }
+
+    pre {
+      padding: 1rem;
+      overflow-x: auto;
+    }
+
+    p:last-child {
+      margin-bottom: 0;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="card">
+      <h1>Database update required</h1>
+      <p>The app was restarted with new code, but the database has not been updated yet.</p>
+
+      <div class="notice">
+        <p><strong>On the server</strong>, run:</p>
+        <pre>cd /path/to/personal_relationship_manager
+RAILS_ENV=production bin/rails db:prepare</pre>
+        <p>Then restart the app. For future restarts, use <code>bin/start</code> so migrations run automatically.</p>
+      </div>
+
+      <p>If you use Docker:</p>
+      <pre>docker compose exec web bin/rails db:prepare</pre>
+
+      <p>After the database is prepared, reload this page.</p>
+    </div>
+  </main>
+</body>
+</html>

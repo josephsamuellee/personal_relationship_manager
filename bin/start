@@ -1,0 +1,10 @@
+#!/bin/bash -e
+
+cd "$(dirname "$0")/.."
+
+if [ -z "${LD_PRELOAD+x}" ] && [ -f /usr/lib/*/libjemalloc.so.2 ]; then
+  export LD_PRELOAD="$(echo /usr/lib/*/libjemalloc.so.2)"
+fi
+
+./bin/rails db:prepare
+exec ./bin/rails server "$@"

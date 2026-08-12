@@ -46,7 +46,7 @@ Never commit secrets. Do not expose the service publicly without access controls
 2. Clone the repo and run `bundle install --without development test`
 3. Set environment variables (see `.env.example`)
 4. Run `RAILS_ENV=production bin/rails db:prepare assets:precompile`
-5. Start with Puma: `RAILS_ENV=production bin/rails server -b 0.0.0.0 -p 3000`
+5. Start with `RAILS_ENV=production bin/start -b 0.0.0.0 -p 3000` (runs migrations automatically on boot)
 
 Puma is configured for low resource use (3 threads). SQLite database should live on persistent storage via `DATABASE_PATH`.
 
@@ -67,7 +67,7 @@ Environment=RAILS_ENV=production
 Environment=SECRET_KEY_BASE=your-secret
 Environment=DATABASE_PATH=/home/pi/prm-data/production.sqlite3
 Environment=APP_TIME_ZONE=America/Los_Angeles
-ExecStart=/home/pi/.rbenv/shims/bundle exec rails server -b 0.0.0.0 -p 3000
+ExecStart=/home/pi/personal_relationship_manager/bin/start -b 0.0.0.0 -p 3000
 Restart=on-failure
 
 [Install]
