@@ -1,3 +1,6 @@
+<%# #region agent log %>
+<% Rails.logger.info("[nav-debug] floating_controls render draft_in_session=#{entry_draft_in_session?} path=#{request.path}") %>
+<%# #endregion %>
 <%= link_to "Home", homepage_path, class: "nav-home" %>
 
 <div class="floating-search" data-controller="search-expand">

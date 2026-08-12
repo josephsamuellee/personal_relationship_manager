@@ -10,7 +10,7 @@
     <%= javascript_importmap_tags %>
   </head>
 
-  <body class="app-body">
+  <body class="app-body" data-controller="nav-debug" data-draft-in-session="<%= entry_draft_in_session? %>">
     <% if flash[:notice] %>
       <div class="flash flash-notice"><%= flash[:notice] %></div>
     <% end %>
