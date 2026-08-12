@@ -1,7 +1,7 @@
 <%# #region agent log %>
 <% Rails.logger.info("[nav-debug] floating_controls render draft_in_session=#{entry_draft_in_session?} path=#{request.path}") %>
 <%# #endregion %>
-<%= link_to "Home", homepage_path, class: "nav-home" %>
+<%= link_to "Home", homepage_path, class: "floating-button floating-home" %>
 
 <div class="floating-search" data-controller="search-expand">
   <button type="button" class="floating-button" data-action="search-expand#toggle" aria-label="Search">Search</button>
@@ -10,7 +10,7 @@
   </form>
 </div>
 
-<div class="floating-actions" aria-label="Entry actions">
+<% if entry_draft_in_session? %>
   <%= link_to "Drafts", drafts_entries_path, class: "floating-button floating-draft" %>
-  <%= link_to "Add Entry", new_entry_path, class: "floating-button floating-add" %>
-</div>
+<% end %>
+<%= link_to "Add Entry", new_entry_path, class: "floating-button floating-add" %>

@@ -16,8 +16,7 @@ export default class extends Controller {
 
   #logNavLayout(trigger) {
     const selectors = [
-      { key: "navHome", selector: ".nav-home" },
-      { key: "floatingActions", selector: ".floating-actions" },
+      { key: "floatingHome", selector: ".floating-home" },
       { key: "floatingSearch", selector: ".floating-search" },
       { key: "floatingDraft", selector: ".floating-draft" },
       { key: "floatingAdd", selector: ".floating-add" }
@@ -35,7 +34,7 @@ export default class extends Controller {
       headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "3d099f" },
       body: JSON.stringify({
         sessionId: "3d099f",
-        runId: "pre-fix",
+        runId: "post-fix",
         hypothesisId: "A-B-C-D",
         location: "nav_debug_controller.js:logNavLayout",
         message: "Nav element layout snapshot",
