@@ -111,12 +111,6 @@ class EntriesController < ApplicationController
     draft.replace_person_link!(old_name, new_name)
     session[:entry_draft] = draft.to_session
 
-    # #region agent log
-    File.open("/Users/josephlee/Documents/personal_relationship_manager/.cursor/debug-ff4759.log", "a") do |f|
-      f.puts({ sessionId: "ff4759", runId: "post-fix", hypothesisId: "B", location: "entries_controller.rb:replace_person_name", message: "replaced person link in draft", data: { old_name: old_name, new_name: new_name, body_markdown: draft.body_markdown, unresolved_remaining: draft.unresolved_people.size }, timestamp: (Time.now.to_f * 1000).to_i }.to_json)
-    end
-    # #endregion
-
     redirect_to preview_entries_path, notice: "Changed all \"#{old_name}\" to \"#{new_name}\"."
   end
 
