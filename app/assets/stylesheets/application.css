@@ -303,7 +303,7 @@ h1, h2, h3 { margin-top: 0; }
   white-space: nowrap;
 }
 
-.floating-home {
+.floating-nav-top {
   position: fixed;
   top: 1rem;
   left: 1rem;
@@ -320,18 +320,15 @@ h1, h2, h3 { margin-top: 0; }
   gap: 0.5rem;
 }
 
-.floating-add {
+.floating-actions {
   position: fixed;
   bottom: 1rem;
   right: 1rem;
   z-index: 100;
-}
-
-.floating-draft {
-  position: fixed;
-  bottom: calc(1rem + 3.25rem + 0.5rem);
-  right: 1rem;
-  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-end;
 }
 
 .search-form {

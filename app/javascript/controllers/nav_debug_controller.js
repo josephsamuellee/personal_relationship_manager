@@ -16,10 +16,9 @@ export default class extends Controller {
 
   #logNavLayout(trigger) {
     const selectors = [
-      { key: "floatingHome", selector: ".floating-home" },
+      { key: "floatingNavTop", selector: ".floating-nav-top" },
       { key: "floatingSearch", selector: ".floating-search" },
-      { key: "floatingDraft", selector: ".floating-draft" },
-      { key: "floatingAdd", selector: ".floating-add" }
+      { key: "floatingActions", selector: ".floating-actions" }
     ]
 
     const elements = {}
