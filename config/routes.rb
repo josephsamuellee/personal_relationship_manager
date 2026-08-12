@@ -8,13 +8,16 @@ Rails.application.routes.draw do
 
   resources :entries, only: [:new, :create, :show, :edit, :update] do
     collection do
-      post :preview
+      get :preview, action: :show_preview
+      post :preview, action: :create_preview
       post :resolve_person
       post :create_person
+      get :drafts
+      delete :draft, action: :discard_draft, as: :discard_draft
     end
 
     member do
-      post :preview, action: :preview_update
+      post :preview, action: :create_preview_update
     end
   end
 

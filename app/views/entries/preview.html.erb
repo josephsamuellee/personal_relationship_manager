@@ -1,26 +1,32 @@
 <h1><%= @entry ? "Edit Entry" : "Preview Entry" %></h1>
 
-<% if @draft.validation_errors.any? %>
-  <div class="validation-errors">
-    <ul>
+<div class="preview-status <%= @draft.valid_for_save? ? 'preview-status-ready' : 'preview-status-needs-attention' %>">
+  <% if @draft.valid_for_save? %>
+    <p><strong>Ready to save.</strong> All <%= pluralize(@draft.parsed_people.size, "person") %> resolved. Your draft is stored — click Save below to publish.</p>
+  <% else %>
+    <p><strong>Needs attention before saving.</strong> Your draft is stored — resolve the items below, then click Save.</p>
+    <ul class="preview-status-list">
       <% @draft.validation_errors.each do |error| %>
         <li><%= error %></li>
       <% end %>
+      <% if @draft.unresolved_people.any? %>
+        <li><%= pluralize(@draft.unresolved_people.size, "person") %> to resolve: <%= @draft.unresolved_people.map { |item| item[:name] }.join(", ") %></li>
+      <% end %>
     </ul>
-  </div>
-<% end %>
+  <% end %>
+</div>
 
 <% @draft.unresolved_people.each do |item| %>
   <div class="resolution-panel">
     <% if item[:result].unknown? %>
       <p>No person named "<%= item[:name] %>" exists.</p>
-      <%= button_to "Create #{item[:name]}", create_person_entries_path, method: :post, params: { name: item[:name] } %>
+      <%= button_to "Create #{item[:name]}", create_person_entries_path, method: :post, params: { name: item[:name] }, form: { data: { turbo: false } } %>
     <% elsif item[:result].ambiguous? %>
-      <p>"<%= item[:name] %>" matches multiple people.</p>
-      <ul>
+      <p>"<%= item[:name] %>" matches multiple people. Pick one:</p>
+      <ul class="resolution-options">
         <% item[:result].people.each do |person| %>
           <li>
-            <%= button_to person.name, resolve_person_entries_path, method: :post, params: { name: item[:name], person_id: person.id } %>
+            <%= button_to person.name, resolve_person_entries_path, method: :post, params: { name: item[:name], person_id: person.id }, form: { data: { turbo: false } } %>
           </li>
         <% end %>
       </ul>
@@ -31,9 +37,9 @@
 <div class="preview-card">
   <p><strong>Title:</strong> <%= @draft.title %></p>
   <p><strong>Date:</strong> <%= @draft.occurred_on %></p>
-  <p><strong>Primary:</strong> <%= @draft.primary_person&.name %></p>
-  <p><strong>Referenced:</strong> <%= @draft.secondary_people.map(&:name).join(", ") %></p>
-  <p><strong>Tags:</strong> <%= @draft.parsed_tags.join(", ") %></p>
+  <p><strong>Primary:</strong> <%= @draft.primary_person&.name || "—" %></p>
+  <p><strong>Referenced:</strong> <%= @draft.secondary_people.map(&:name).presence&.join(", ") || "—" %></p>
+  <p><strong>Tags:</strong> <%= @draft.parsed_tags.presence&.join(", ") || "—" %></p>
 
   <% if @entry && @relationship_diff&.changed? %>
     <div class="relationship-diff">
@@ -54,17 +60,22 @@
   <% end %>
 
   <div class="preview-markdown">
-    <h3>Preview</h3>
+    <h3>Rendered preview</h3>
     <%= render_markdown(@draft.body_markdown) %>
   </div>
 </div>
 
-<% if @draft.valid_for_save? %>
-  <% if @entry %>
-    <%= button_to "Save", entry_path(@entry), method: :patch %>
+<div class="preview-actions">
+  <% if @draft.valid_for_save? %>
+    <% if @entry %>
+      <%= button_to "Save entry", entry_path(@entry), method: :patch, class: "button-primary", form: { data: { turbo: false } } %>
+    <% else %>
+      <%= button_to "Save entry", entries_path, method: :post, class: "button-primary", form: { data: { turbo: false } } %>
+    <% end %>
   <% else %>
-    <%= button_to "Save", entries_path, method: :post %>
+    <p class="hint">Save will be available once all people are resolved and validation passes.</p>
   <% end %>
-<% end %>
 
-<%= link_to "Edit Entry", @entry ? edit_entry_path(@entry) : new_entry_path %>
+  <%= link_to "Edit entry", @entry ? edit_entry_path(@entry) : new_entry_path, class: "button-secondary" %>
+  <%= button_to "Discard draft", discard_draft_entries_path, method: :delete, class: "button-danger", form: { data: { turbo: false, turbo_confirm: "Discard this draft?" } } %>
+</div>

@@ -29,7 +29,7 @@ class EntryDraft
     attrs = data.symbolize_keys
     attrs[:occurred_on] = Date.parse(attrs[:occurred_on]) if attrs[:occurred_on].is_a?(String)
     draft = new(attrs)
-    draft.parse! unless draft.parsed_people.present? && draft.occurred_on.present?
+    draft.parse!
     draft
   end
 
@@ -72,10 +72,11 @@ class EntryDraft
   end
 
   def unresolved_people
+    selections = (person_selections || {}).stringify_keys
     parsed_people.each_with_index.filter_map do |name, index|
       next if resolved_people_ids[index].present?
 
-      result = PersonResolver.resolve(person_selections[name] || name)
+      result = PersonResolver.resolve(selections[name] || name)
       { name: name, index: index, result: result }
     end
   end
