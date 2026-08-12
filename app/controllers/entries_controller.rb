@@ -94,6 +94,22 @@ class EntriesController < ApplicationController
     redirect_to preview_entries_path, notice: "Created and linked #{person.name}."
   end
 
+  def replace_person_name
+    draft_data = session[:entry_draft]
+    unless draft_data
+      redirect_to new_entry_path, alert: "No draft found."
+      return
+    end
+
+    old_name = params[:name]
+    new_name = params[:replacement]
+    draft = EntryDraft.from_session(draft_data)
+    draft.replace_person_link!(old_name, new_name)
+    session[:entry_draft] = draft.to_session
+
+    redirect_to preview_entries_path, notice: "Replaced \"#{old_name}\" with \"#{new_name}\"."
+  end
+
   def drafts
     @draft = load_draft_from_session
   end

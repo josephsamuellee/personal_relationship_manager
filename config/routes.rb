@@ -12,6 +12,7 @@ Rails.application.routes.draw do
       post :preview, action: :create_preview
       post :resolve_person
       post :create_person
+      post :replace_person_name
       get :drafts
       delete :draft, action: :discard_draft, as: :discard_draft
     end

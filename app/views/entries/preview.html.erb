@@ -20,6 +20,16 @@
   <div class="resolution-panel">
     <% if item[:result].unknown? %>
       <p>No person named "<%= item[:name] %>" exists.</p>
+      <% if item[:suggestions].any? %>
+        <p><strong>Did you mean:</strong></p>
+        <ul class="resolution-options">
+          <% item[:suggestions].each do |person| %>
+            <li>
+              <%= button_to "Replace \"#{item[:name]}\" with \"#{person.name}\"", replace_person_name_entries_path, method: :post, params: { name: item[:name], replacement: person.name }, form: { data: { turbo: false } } %>
+            </li>
+          <% end %>
+        </ul>
+      <% end %>
       <%= button_to "Create #{item[:name]}", create_person_entries_path, method: :post, params: { name: item[:name] }, form: { data: { turbo: false } } %>
     <% elsif item[:result].ambiguous? %>
       <p>"<%= item[:name] %>" matches multiple people. Pick one:</p>
