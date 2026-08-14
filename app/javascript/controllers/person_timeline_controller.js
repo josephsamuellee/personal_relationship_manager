@@ -44,35 +44,39 @@ export default class extends Controller {
     })
 
     this.nodesTarget.innerHTML = ""
-    this.axisTarget.innerHTML = ""
+    this.containerTarget.querySelectorAll(".timeline-year-label, .timeline-year-tick").forEach(el => el.remove())
 
     const yearLabel = document.createElement("div")
     yearLabel.className = "timeline-year-label"
     yearLabel.textContent = String(minDate.getFullYear())
     yearLabel.style.left = `${positionFor(minDate)}px`
-    this.axisTarget.appendChild(yearLabel)
+    this.containerTarget.appendChild(yearLabel)
 
     yearBoundaryDates(minDate, maxDate).forEach(date => {
+      const year = String(date.getFullYear())
       const tick = document.createElement("div")
       tick.className = "timeline-year-tick"
       tick.style.left = `${positionFor(date)}px`
-      tick.title = String(date.getFullYear())
-      tick.setAttribute("aria-label", String(date.getFullYear()))
-      this.axisTarget.appendChild(tick)
+      tick.dataset.year = year
+      tick.title = year
+      tick.setAttribute("aria-label", year)
+      this.containerTarget.appendChild(tick)
     })
 
     positioned.forEach(entry => {
+      const hoverText = `${formatYearMonth(entry.date)} ${entry.title}`
       const node = document.createElement("div")
       node.className = "timeline-node"
       node.style.left = `${entry.x}px`
       node.style.bottom = `${entry.lane * 28}px`
       node.dataset.entryId = entry.id
       node.dataset.url = entry.url
+      node.dataset.hover = hoverText
+      node.title = hoverText
       node.dataset.action = "click->entry-overlay#open"
 
       const dot = document.createElement("div")
       dot.className = `timeline-node-dot${entry.primary ? "" : " secondary"}`
-      dot.title = `${formatYearMonth(entry.date)} ${entry.title}`
 
       const label = document.createElement("div")
       label.className = "timeline-node-label"
@@ -86,7 +90,7 @@ export default class extends Controller {
 }
 
 function parseISODate(iso) {
-  const [year, month, day] = iso.split("-").map(Number)
+  const [year, month, day] = String(iso).slice(0, 10).split("-").map(Number)
   return new Date(year, month - 1, day)
 }
 
