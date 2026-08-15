@@ -22,5 +22,6 @@ Rails.application.routes.draw do
     end
   end
 
+  get "/search/entries", to: "search#entries", as: :search_entries
   get "/search", to: "search#show", as: :search
 end

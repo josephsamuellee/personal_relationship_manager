@@ -21,6 +21,10 @@ class Entry < ApplicationRecord
     primary_person_id == person.id
   end
 
+  def people_in_display_order
+    [primary_person, *entry_people.map(&:person)].compact.uniq
+  end
+
   private
 
   def primary_person_in_people

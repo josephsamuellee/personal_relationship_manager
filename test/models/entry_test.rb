@@ -60,6 +60,19 @@ class EntryTest < ActiveSupport::TestCase
     assert_equal [@sarah], updated.people
   end
 
+  test "people_in_display_order lists primary first then referenced people without duplicates" do
+    entry = Entry.create!(
+      title: "Dinner",
+      occurred_on: Date.new(2026, 8, 9),
+      body_markdown: "Dinner with [[Sarah]] and [[Andrew]]",
+      primary_person: @andrew
+    )
+    entry.entry_people.create!(person: @sarah, position: 0)
+    entry.entry_people.create!(person: @andrew, position: 1)
+
+    assert_equal [@andrew, @sarah], entry.people_in_display_order
+  end
+
   test "from_session re-resolves people after person selections change" do
     draft = EntryDraft.from_params(
       title: "Dinner",

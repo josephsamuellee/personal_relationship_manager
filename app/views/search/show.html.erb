@@ -31,5 +31,8 @@
         <li><%= link_to entry.title, entry_path(entry) %></li>
       <% end %>
     </ul>
+    <% if @results[:more_entries] %>
+      <p><%= link_to "See all entries", search_entries_path(q: @query) %></p>
+    <% end %>
   </section>
 <% end %>
