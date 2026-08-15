@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_08_10_053001) do
+ActiveRecord::Schema[7.2].define(version: 2026_08_15_180000) do
   create_table "entries", force: :cascade do |t|
     t.string "title", null: false
     t.date "occurred_on", null: false
@@ -50,6 +50,12 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_10_053001) do
     t.datetime "updated_at", null: false
     t.index ["name"], name: "index_people_on_name"
     t.index ["slug"], name: "index_people_on_slug", unique: true
+  end
+
+  create_table "settings", force: :cascade do |t|
+    t.string "theme", default: "dark", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "tags", force: :cascade do |t|

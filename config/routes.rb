@@ -24,4 +24,7 @@ Rails.application.routes.draw do
 
   get "/search/entries", to: "search#entries", as: :search_entries
   get "/search", to: "search#show", as: :search
+
+  get "/config", to: "config#show", as: :config
+  patch "/config", to: "config#update"
 end
