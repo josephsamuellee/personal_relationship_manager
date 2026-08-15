@@ -96,18 +96,92 @@ h1, h2, h3 { margin-top: 0; }
 
 .timeline-container {
   position: relative;
-  height: 120px;
+  height: 140px;
   margin: 2rem 0;
-  border-bottom: 2px solid var(--border);
 }
 
 .timeline-axis {
   position: absolute;
-  bottom: 0;
+  bottom: 1.4rem;
   left: 0;
   right: 0;
   height: 2px;
   background: var(--border);
+  z-index: 1;
+}
+
+.timeline-nodes {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 1.4rem;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.timeline-year-label {
+  position: absolute;
+  bottom: 0;
+  transform: translateX(-50%);
+  font-size: 0.75rem;
+  color: var(--muted);
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 1;
+}
+
+.timeline-year-tick {
+  position: absolute;
+  bottom: 1.4rem;
+  width: 20px;
+  height: 20px;
+  transform: translate(-50%, 50%);
+  cursor: default;
+  z-index: 1;
+}
+
+.timeline-year-tick::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 2px;
+  height: 12px;
+  background: var(--muted);
+  transform: translate(-50%, -50%);
+}
+
+.timeline-year-tick::before,
+.timeline-node::before {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.15rem 0.4rem;
+  border-radius: 3px;
+  background: var(--text);
+  color: #fff;
+  font-size: 0.7rem;
+  line-height: 1.2;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.timeline-year-tick::before {
+  content: attr(data-year);
+  bottom: calc(100% + 2px);
+}
+
+.timeline-node::before {
+  content: attr(data-hover);
+  bottom: calc(100% + 4px);
+}
+
+.timeline-year-tick:hover::before,
+.timeline-node:hover::before {
+  opacity: 1;
 }
 
 .timeline-node {
@@ -116,6 +190,8 @@ h1, h2, h3 { margin-top: 0; }
   transform: translateX(-50%);
   cursor: pointer;
   text-align: center;
+  pointer-events: auto;
+  z-index: 2;
 }
 
 .timeline-node-dot {
