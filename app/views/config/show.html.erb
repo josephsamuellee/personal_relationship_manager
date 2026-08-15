@@ -1,0 +1,38 @@
+<div class="config-page">
+  <h1>Config</h1>
+
+  <section class="config-section">
+    <h2>Appearance</h2>
+    <div class="theme-control">
+      <span>Theme: <%= @theme.capitalize %></span>
+      <%= form_with url: config_path, method: :patch, class: "theme-toggle-form" do %>
+        <%= hidden_field_tag :theme, @theme == "dark" ? "light" : "dark" %>
+        <%= button_tag type: "submit", class: "theme-toggle #{@theme}", role: "switch", "aria-checked": (@theme == "dark").to_s, "aria-label": "Switch theme" do %>
+          <span class="theme-toggle-track">
+            <span class="theme-toggle-knob"></span>
+          </span>
+        <% end %>
+      <% end %>
+    </div>
+  </section>
+
+  <section class="config-section">
+    <h2>Database</h2>
+    <table class="stats-table">
+      <tbody>
+        <tr>
+          <th scope="row">Size</th>
+          <td><%= @statistics.formatted_database_size %></td>
+        </tr>
+        <tr>
+          <th scope="row">Total entries</th>
+          <td><%= @statistics.total_entries %></td>
+        </tr>
+        <tr>
+          <th scope="row">Created last 30 days</th>
+          <td><%= @statistics.entries_created_last_30_days %></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</div>
