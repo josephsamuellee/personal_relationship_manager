@@ -6,11 +6,20 @@ class SearchService
   end
 
   def results
+    preview_entries, more_entries = truncated_entries
+
     {
       people: search_people,
       timeline: search_timeline,
-      entries: search_entries
+      entries: preview_entries,
+      more_entries: more_entries
     }
+  end
+
+  def all_entries
+    matching_entries
+      .includes(:primary_person, entry_people: :person)
+      .recent_first
   end
 
   private
@@ -53,33 +62,33 @@ class SearchService
     []
   end
 
-  def search_entries
-    return [] if @query.blank?
+  def truncated_entries
+    records = matching_entries
+                .includes(:primary_person, :tags)
+                .recent_first
+                .limit(MAX_RESULTS + 1)
+                .to_a
+
+    [records.first(MAX_RESULTS), records.size > MAX_RESULTS]
+  end
+
+  def matching_entries
+    return Entry.none if @query.blank?
 
     like = "%#{@query.downcase}%"
-    title_matches = Entry.includes(:primary_person, :tags)
-                         .where("LOWER(title) LIKE ?", like)
-                         .recent_first
-                         .limit(MAX_RESULTS)
-                         .to_a
-    return title_matches if title_matches.size >= MAX_RESULTS
-
-    tag_matches = Entry.includes(:primary_person, :tags)
-                       .joins(:tags)
-                       .where("LOWER(tags.name) LIKE ?", like)
-                       .where.not(id: title_matches.map(&:id))
-                       .recent_first
-                       .limit(MAX_RESULTS - title_matches.size)
-                       .to_a
-    combined = title_matches + tag_matches
-    return combined if combined.size >= MAX_RESULTS
-
-    body_matches = Entry.includes(:primary_person, :tags)
-                        .where("LOWER(body_markdown) LIKE ?", like)
-                        .where.not(id: combined.map(&:id))
-                        .recent_first
-                        .limit(MAX_RESULTS - combined.size)
-                        .to_a
-    combined + body_matches
+    Entry.where(
+      <<~SQL.squish,
+        LOWER(title) LIKE :q
+        OR LOWER(body_markdown) LIKE :q
+        OR EXISTS (
+          SELECT 1
+          FROM entry_tags
+          INNER JOIN tags ON tags.id = entry_tags.tag_id
+          WHERE entry_tags.entry_id = entries.id
+            AND LOWER(tags.name) LIKE :q
+        )
+      SQL
+      q: like
+    )
   end
 end

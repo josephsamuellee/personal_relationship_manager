@@ -376,6 +376,24 @@ h1, h2, h3 { margin-top: 0; }
   cursor: pointer;
 }
 
+.search-entries-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.search-entries-table th,
+.search-entries-table td {
+  text-align: left;
+  padding: 0.5rem 0.75rem 0.5rem 0;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.search-entries-table th {
+  font-weight: 600;
+}
+
 @media (max-width: 640px) {
   .split-view, .random-grid {
     grid-template-columns: 1fr;
