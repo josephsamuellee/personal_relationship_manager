@@ -4,17 +4,16 @@
   <section class="homepage-section">
     <h2>Recent Timeline</h2>
     <div class="recent-timeline">
-      <% @presenter.recent_timeline_dates.each do |date| %>
-        <% entries = @presenter.recent_timeline_entries[date] || [] %>
-        <div class="recent-timeline-row">
-          <span class="recent-timeline-day"><%= @presenter.weekday_letter(date) %></span>
-          <span class="recent-timeline-content">
-            <% if entries.any? %>
-              <%= safe_join(entries.map { |entry| link_to(entry.title, entry_path(entry)) }, ", ") %>
-            <% end %>
-          </span>
-        </div>
-      <% end %>
+      <div class="recent-timeline-group">
+        <%= render partial: "homepage/recent_timeline_row",
+                   collection: @presenter.recent_timeline_older_dates,
+                   as: :date %>
+      </div>
+      <div class="recent-timeline-group">
+        <%= render partial: "homepage/recent_timeline_row",
+                   collection: @presenter.recent_timeline_newer_dates,
+                   as: :date %>
+      </div>
     </div>
   </section>
 
