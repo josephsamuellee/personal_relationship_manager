@@ -1,0 +1,10 @@
+<% entries = @presenter.recent_timeline_entries[date] || [] %>
+<div class="recent-timeline-row<%= " today" if @presenter.today?(date) %>">
+  <span class="recent-timeline-week"><%= @presenter.week_label(date) %></span>
+  <span class="recent-timeline-day"><%= @presenter.weekday_letter(date) %></span>
+  <span class="recent-timeline-content">
+    <% if entries.any? %>
+      <%= safe_join(entries.map { |entry| link_to(entry.title, entry_path(entry)) }, ", ") %>
+    <% end %>
+  </span>
+</div>

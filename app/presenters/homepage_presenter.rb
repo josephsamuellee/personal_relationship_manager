@@ -1,4 +1,6 @@
 class HomepagePresenter
+  LANDSCAPE_OLDER_COUNT = 7
+
   def initialize(today: Time.zone.today)
     @today = today
   end
@@ -8,11 +10,31 @@ class HomepagePresenter
     (start_date..@today).to_a
   end
 
+  def recent_timeline_older_dates
+    recent_timeline_dates.first(LANDSCAPE_OLDER_COUNT)
+  end
+
+  def recent_timeline_newer_dates
+    recent_timeline_dates.drop(LANDSCAPE_OLDER_COUNT)
+  end
+
   def recent_timeline_entries
-    Entry.includes(:primary_person)
-         .between_dates(recent_timeline_dates.first, recent_timeline_dates.last)
-         .order(:occurred_on, :title)
-         .group_by(&:occurred_on)
+    @recent_timeline_entries ||= begin
+      Entry.includes(:primary_person)
+           .between_dates(recent_timeline_dates.first, recent_timeline_dates.last)
+           .order(:occurred_on, :title)
+           .group_by(&:occurred_on)
+    end
+  end
+
+  def today?(date)
+    date == @today
+  end
+
+  def week_label(date)
+    return unless date.monday? || today?(date)
+
+    format("W%02d", date.cweek)
   end
 
   def historical_window
