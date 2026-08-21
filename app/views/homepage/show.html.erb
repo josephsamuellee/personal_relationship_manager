@@ -1,6 +1,18 @@
 <div class="homepage">
   <h1>Homepage</h1>
 
+  <section class="homepage-section favorite-people">
+    <h2>Favorite People</h2>
+    <div class="favorite-people-grid">
+      <% @presenter.favorite_people.each do |person| %>
+        <div class="favorite-people-slot"><% if person %><%= link_to person.name, person_path(person) %><% end %></div>
+      <% end %>
+      <div class="favorite-people-slot favorite-people-see-all">
+        <%= link_to "See all people", people_path %>
+      </div>
+    </div>
+  </section>
+
   <section class="homepage-section">
     <h2>Recent Timeline</h2>
     <div class="recent-timeline">

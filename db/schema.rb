@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_08_15_180000) do
+ActiveRecord::Schema[7.2].define(version: 2026_08_21_031403) do
   create_table "entries", force: :cascade do |t|
     t.string "title", null: false
     t.date "occurred_on", null: false
@@ -56,6 +56,12 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_15_180000) do
     t.string "theme", default: "dark", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "favorite_person_1_id"
+    t.integer "favorite_person_2_id"
+    t.integer "favorite_person_3_id"
+    t.index ["favorite_person_1_id"], name: "index_settings_on_favorite_person_1_id"
+    t.index ["favorite_person_2_id"], name: "index_settings_on_favorite_person_2_id"
+    t.index ["favorite_person_3_id"], name: "index_settings_on_favorite_person_3_id"
   end
 
   create_table "tags", force: :cascade do |t|
@@ -70,4 +76,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_15_180000) do
   add_foreign_key "entry_people", "people"
   add_foreign_key "entry_tags", "entries"
   add_foreign_key "entry_tags", "tags"
+  add_foreign_key "settings", "people", column: "favorite_person_1_id", on_delete: :nullify
+  add_foreign_key "settings", "people", column: "favorite_person_2_id", on_delete: :nullify
+  add_foreign_key "settings", "people", column: "favorite_person_3_id", on_delete: :nullify
 end

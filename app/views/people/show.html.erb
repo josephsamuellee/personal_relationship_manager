@@ -25,6 +25,26 @@
   <section class="person-section" data-controller="about-editor">
     <h2>About</h2>
     <%= form_with model: @person, url: person_path(@person), method: :patch, class: "about-form" do |form| %>
+      <% if @person.errors.any? %>
+        <div class="flash flash-alert">
+          <ul>
+            <% @person.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <div class="field favorite-slot-field">
+        <label for="person_favorite_slot">Favorite People</label>
+        <%= select_tag "person[favorite_slot]",
+              options_for_select(
+                [["Not favorited", ""], ["1", "1"], ["2", "2"], ["3", "3"]],
+                @favorite_slot.to_s
+              ),
+              id: "person_favorite_slot" %>
+      </div>
+
       <div data-about-editor-target="editor">
         <%= form.text_area :about_markdown, rows: 8, class: "about-textarea", data: { about_editor_target: "textarea" } %>
       </div>

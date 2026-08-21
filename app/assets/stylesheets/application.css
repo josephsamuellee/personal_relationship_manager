@@ -155,6 +155,21 @@ input[type="submit"] {
   gap: 1.5rem;
 }
 
+.favorite-people-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.favorite-people-slot {
+  min-height: 1.5rem;
+}
+
+.favorite-slot-field {
+  margin-bottom: 1rem;
+}
+
 .entry-list {
   list-style: none;
   padding: 0;
@@ -319,7 +334,8 @@ input[type="submit"] {
 
 .field input[type="text"],
 .field input[type="search"],
-.field textarea {
+.field textarea,
+.field select {
   width: 100%;
   padding: 0.5rem;
   border: 1px solid var(--border);
@@ -663,11 +679,19 @@ input[type="submit"] {
 }
 
 @media (max-width: 640px) {
-  .split-view, .random-grid, .recent-timeline {
+  .split-view, .random-grid, .recent-timeline, .favorite-people-grid {
     grid-template-columns: 1fr;
   }
 
   .recent-timeline {
     gap: 0;
+  }
+
+  .favorite-people-grid {
+    gap: 0.35rem;
+  }
+
+  .favorite-people-slot:empty {
+    display: none;
   }
 }
