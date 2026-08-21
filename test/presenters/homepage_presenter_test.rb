@@ -113,4 +113,22 @@ class HomepagePresenterTest < ActiveSupport::TestCase
     assert_equal Date.new(2026, 5, 2), window[:start_date]
     assert_equal Date.new(2026, 5, 16), window[:end_date]
   end
+
+  test "favorite_people returns only configured people in slot order" do
+    andrew = Person.create!(name: "Andrew", slug: "andrew")
+    carolyn = Person.create!(name: "Carolyn", slug: "carolyn")
+    Person.create!(name: "Jerry", slug: "jerry")
+    Setting.assign_favorite_slot!(carolyn, 2)
+    Setting.assign_favorite_slot!(andrew, 1)
+
+    presenter = HomepagePresenter.new
+
+    assert_equal [ andrew, carolyn, nil ], presenter.favorite_people
+  end
+
+  test "favorite_people defaults to three empty slots" do
+    presenter = HomepagePresenter.new
+
+    assert_equal [ nil, nil, nil ], presenter.favorite_people
+  end
 end

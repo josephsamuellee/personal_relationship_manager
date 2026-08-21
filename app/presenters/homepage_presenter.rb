@@ -64,4 +64,9 @@ class HomepagePresenter
   def weekday_letter(date)
     date.strftime("%a")[0]
   end
+
+  # Ordered [slot1, slot2, slot3]; nil when unassigned or stale.
+  def favorite_people
+    @favorite_people ||= Setting.favorite_people
+  end
 end

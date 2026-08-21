@@ -12,7 +12,21 @@ class ConfigControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "h1", text: "Config"
     assert_select "h2", text: "Appearance"
+    assert_select "h2", text: "Favorite People"
     assert_select "h2", text: "Database"
+  end
+
+  test "favorite people settings are not editable from the config page" do
+    Setting.assign_favorite_slot!(@person, 1)
+
+    get config_path
+
+    assert_response :success
+    assert_select "h2", text: "Favorite People"
+    assert_select "select", count: 0
+    assert_select "input[name*='favorite']", count: 0
+    assert_select ".placeholder em", text: /Person page/
+    assert_match(/Favorite People homepage slots/, response.body)
   end
 
   test "config page displays database statistics" do
