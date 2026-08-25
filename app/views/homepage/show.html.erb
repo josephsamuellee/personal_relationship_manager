@@ -27,6 +27,9 @@
                    as: :date %>
       </div>
     </div>
+    <p class="recent-timeline-see-more">
+      <%= link_to "See more", timeline_path(year: Time.zone.today.year) %>
+    </p>
   </section>
 
   <section class="homepage-section">

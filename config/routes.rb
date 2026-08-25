@@ -3,6 +3,7 @@ Rails.application.routes.draw do
 
   root to: redirect("/homepage")
   get "/homepage", to: "homepage#show", as: :homepage
+  get "/timeline/:year", to: "timeline#show", as: :timeline
 
   resources :people, only: [:index, :show, :update]
 

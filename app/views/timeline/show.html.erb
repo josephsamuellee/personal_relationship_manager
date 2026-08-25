@@ -1,0 +1,75 @@
+<div class="year-timeline">
+  <div class="year-timeline-sticky">
+    <header class="year-timeline-header">
+      <div class="year-timeline-nav year-timeline-nav-prev">
+        <% if @presenter.previous_year %>
+          <%= link_to "←", timeline_year_path(@presenter.previous_year, @presenter), class: "year-timeline-arrow", aria: { label: "Previous year" } %>
+        <% else %>
+          <span class="year-timeline-arrow disabled" aria-disabled="true">←</span>
+        <% end %>
+      </div>
+
+      <div class="year-timeline-nav year-timeline-nav-center">
+        <h1 class="year-timeline-heading">
+          <% if @presenter.available_years.include?(@presenter.year) %>
+            <label class="year-timeline-year-label">
+              <span class="visually-hidden">Year</span>
+              <select class="year-timeline-year-select"
+                      aria-label="Select year"
+                      onchange="if (this.value) Turbo.visit(this.value)">
+                <% @presenter.available_years.each do |year| %>
+                  <option value="<%= timeline_year_path(year, @presenter) %>" <%= "selected" if year == @presenter.year %>>
+                    <%= year %>
+                  </option>
+                <% end %>
+              </select>
+            </label>
+          <% else %>
+            <%= @presenter.year %>
+          <% end %>
+        </h1>
+      </div>
+
+      <div class="year-timeline-nav year-timeline-nav-next">
+        <% if @presenter.next_year %>
+          <%= link_to "→", timeline_year_path(@presenter.next_year, @presenter), class: "year-timeline-arrow", aria: { label: "Next year" } %>
+        <% else %>
+          <span class="year-timeline-arrow disabled" aria-disabled="true">→</span>
+        <% end %>
+      </div>
+    </header>
+
+    <div class="year-timeline-controls">
+      <% if @presenter.show_all? %>
+        <%= link_to "Hide empty days", timeline_path(year: @presenter.year), class: "year-timeline-control" %>
+      <% else %>
+        <%= link_to "Show all days", timeline_path(year: @presenter.year, show_all: 1), class: "year-timeline-control" %>
+      <% end %>
+      <%= link_to "Jump to today", timeline_jump_to_today_path(@presenter), class: "year-timeline-control" %>
+    </div>
+  </div>
+
+  <div class="year-timeline-table" role="table" aria-label="<%= @presenter.year %> timeline">
+    <% if @presenter.empty_filtered_state? %>
+      <p class="year-timeline-empty">No entries for this year.</p>
+    <% else %>
+      <% @presenter.visible_dates.each do |date| %>
+        <% entries = @presenter.entries_for(date) %>
+        <div class="year-timeline-row<%= " today" if @presenter.today?(date) %>"
+             role="row"
+             <% if @presenter.today?(date) %>id="today"<% end %>>
+          <span class="year-timeline-iso" role="cell"><%= @presenter.iso_week_day_label(date) %></span>
+          <%= timeline_calendar_date(date, label: @presenter.calendar_date_label(date)) %>
+          <span class="year-timeline-entries" role="cell">
+            <% if @presenter.today?(date) %>
+              <span class="year-timeline-today-marker">(today)</span><%= " " if entries.any? %>
+            <% end %>
+            <% if entries.any? %>
+              <%= safe_join(entries.map { |entry| link_to(entry.title, entry_path(entry)) }, tag.br) %>
+            <% end %>
+          </span>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+</div>
