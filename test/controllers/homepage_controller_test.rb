@@ -124,4 +124,13 @@ class HomepageControllerTest < ActionDispatch::IntegrationTest
       assert_select ".recent-timeline-row.today a[href=?]", entry_path(today_entry), text: "Airport trip"
     end
   end
+
+  test "recent timeline includes a see more link to the current year timeline" do
+    travel_to Time.zone.local(2026, 8, 18, 12, 0, 0) do
+      get homepage_path
+
+      assert_response :success
+      assert_select ".recent-timeline-see-more a[href=?]", timeline_path(year: 2026), text: "See more"
+    end
+  end
 end

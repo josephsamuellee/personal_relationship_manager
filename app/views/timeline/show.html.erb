@@ -1,0 +1,55 @@
+<div class="year-timeline">
+  <header class="year-timeline-header">
+    <div class="year-timeline-nav year-timeline-nav-prev">
+      <% if @presenter.previous_year %>
+        <%= link_to "←", timeline_path(year: @presenter.previous_year), class: "year-timeline-arrow", aria: { label: "Previous year" } %>
+      <% else %>
+        <span class="year-timeline-arrow disabled" aria-disabled="true">←</span>
+      <% end %>
+    </div>
+
+    <div class="year-timeline-nav year-timeline-nav-center">
+      <h1 class="year-timeline-heading">
+        <% if @presenter.available_years.include?(@presenter.year) %>
+          <label class="year-timeline-year-label">
+            <span class="visually-hidden">Year</span>
+            <select class="year-timeline-year-select"
+                    aria-label="Select year"
+                    onchange="if (this.value) Turbo.visit(this.value)">
+              <% @presenter.available_years.each do |year| %>
+                <option value="<%= timeline_path(year: year) %>" <%= "selected" if year == @presenter.year %>>
+                  <%= year %>
+                </option>
+              <% end %>
+            </select>
+          </label>
+        <% else %>
+          <%= @presenter.year %>
+        <% end %>
+      </h1>
+    </div>
+
+    <div class="year-timeline-nav year-timeline-nav-next">
+      <% if @presenter.next_year %>
+        <%= link_to "→", timeline_path(year: @presenter.next_year), class: "year-timeline-arrow", aria: { label: "Next year" } %>
+      <% else %>
+        <span class="year-timeline-arrow disabled" aria-disabled="true">→</span>
+      <% end %>
+    </div>
+  </header>
+
+  <div class="year-timeline-table" role="table" aria-label="<%= @presenter.year %> timeline">
+    <% @presenter.dates.each do |date| %>
+      <% entries = @presenter.entries_for(date) %>
+      <div class="year-timeline-row<%= " today" if @presenter.today?(date) %>" role="row">
+        <span class="year-timeline-iso" role="cell"><%= @presenter.iso_week_day_label(date) %></span>
+        <span class="year-timeline-cal" role="cell"><%= @presenter.calendar_date_label(date) %></span>
+        <span class="year-timeline-entries" role="cell">
+          <% if entries.any? %>
+            <%= safe_join(entries.map { |entry| link_to(entry.title, entry_path(entry)) }, tag.br) %>
+          <% end %>
+        </span>
+      </div>
+    <% end %>
+  </div>
+</div>
