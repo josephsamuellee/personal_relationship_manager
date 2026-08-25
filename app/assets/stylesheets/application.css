@@ -137,12 +137,22 @@ input[type="submit"] {
   font-size: 0.875rem;
 }
 
+.year-timeline-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--bg);
+  padding: 0.25rem 0 0.75rem;
+  margin: 0 0 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
 .year-timeline-header {
   display: grid;
   grid-template-columns: 2.5rem 1fr 2.5rem;
   align-items: center;
   gap: 0.5rem;
-  margin-bottom: 1.25rem;
+  margin-bottom: 0.75rem;
 }
 
 .year-timeline-nav-prev {
@@ -203,6 +213,24 @@ input[type="submit"] {
   pointer-events: none;
 }
 
+.year-timeline-controls {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  font-size: 0.875rem;
+}
+
+.year-timeline-control {
+  color: var(--link);
+}
+
+.year-timeline-empty {
+  color: var(--muted);
+  font-style: italic;
+  margin: 0.5rem 0 0;
+}
+
 .year-timeline-table {
   display: flex;
   flex-direction: column;
@@ -233,10 +261,18 @@ input[type="submit"] {
   display: inline;
 }
 
+.year-timeline-today-marker {
+  font-weight: 700;
+}
+
 .year-timeline-row.today,
 .year-timeline-row.today .year-timeline-iso,
 .year-timeline-row.today .year-timeline-cal {
   font-weight: 700;
+}
+
+#today {
+  scroll-margin-top: 7rem;
 }
 
 .visually-hidden {

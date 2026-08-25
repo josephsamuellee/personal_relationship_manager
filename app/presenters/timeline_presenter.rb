@@ -10,27 +10,38 @@ class TimelinePresenter
          .uniq
   end
 
-  def self.parse_year(raw, today: Time.zone.today, available: nil)
-    years = available || available_years
+  def self.parse_year(raw, today: Time.zone.today)
     year = Integer(raw, exception: false)
     return fallback_year(today: today) unless year&.between?(MIN_YEAR, MAX_YEAR)
-    return year if years.include?(year)
-    return year if year == today.year
 
-    fallback_year(today: today)
+    year
   end
 
   def self.fallback_year(today: Time.zone.today)
     today.year
   end
 
-  def initialize(year:, today: Time.zone.today, available_years: nil)
+  def self.show_all?(raw)
+    value = raw.to_s
+    value.present? && value != "0"
+  end
+
+  def initialize(year:, today: Time.zone.today, available_years: nil, show_all: false)
     @year = year
     @today = today
     @available_years = available_years
+    @show_all = show_all
   end
 
   attr_reader :year
+
+  def show_all?
+    @show_all
+  end
+
+  def query_params
+    show_all? ? { show_all: 1 } : {}
+  end
 
   def available_years
     @available_years ||= self.class.available_years
@@ -46,6 +57,24 @@ class TimelinePresenter
 
   def dates
     (start_date..end_date).to_a
+  end
+
+  def current_year?
+    @year == @today.year
+  end
+
+  def visible_dates
+    return dates if show_all?
+
+    dates_with_entries = entries_by_date.keys.sort
+    return dates_with_entries unless current_year?
+    return dates_with_entries if dates_with_entries.include?(@today)
+
+    (dates_with_entries + [ @today ]).sort
+  end
+
+  def empty_filtered_state?
+    !show_all? && visible_dates.empty?
   end
 
   def entries_by_date

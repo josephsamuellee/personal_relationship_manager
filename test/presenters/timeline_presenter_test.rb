@@ -37,6 +37,55 @@ class TimelinePresenterTest < ActiveSupport::TestCase
     assert_equal Date.new(2024, 12, 31), presenter.dates.last
   end
 
+  test "visible_dates hides empty days by default" do
+    create_entry!(title: "Dinner", occurred_on: Date.new(2026, 8, 23), primary: @person)
+    create_entry!(title: "Work", occurred_on: Date.new(2026, 8, 26), primary: @person)
+    today = Date.new(2026, 8, 24)
+    presenter = TimelinePresenter.new(year: 2026, today: today)
+
+    assert_equal [
+      Date.new(2026, 8, 23),
+      Date.new(2026, 8, 24),
+      Date.new(2026, 8, 26)
+    ], presenter.visible_dates
+  end
+
+  test "visible_dates keeps today even when it has no entries" do
+    create_entry!(title: "Dinner", occurred_on: Date.new(2026, 8, 23), primary: @person)
+    today = Date.new(2026, 8, 24)
+    presenter = TimelinePresenter.new(year: 2026, today: today)
+
+    assert_includes presenter.visible_dates, today
+    assert_equal [], presenter.entries_for(today)
+  end
+
+  test "visible_dates for a non-current empty year is empty until show_all" do
+    today = Date.new(2026, 8, 24)
+    filtered = TimelinePresenter.new(year: 2024, today: today)
+    shown = TimelinePresenter.new(year: 2024, today: today, show_all: true)
+
+    assert_equal [], filtered.visible_dates
+    assert filtered.empty_filtered_state?
+    assert_equal 366, shown.visible_dates.size
+    refute shown.empty_filtered_state?
+  end
+
+  test "visible_dates with show_all returns every calendar day" do
+    create_entry!(title: "Dinner", occurred_on: Date.new(2026, 8, 23), primary: @person)
+    presenter = TimelinePresenter.new(year: 2026, today: Date.new(2026, 8, 24), show_all: true)
+
+    assert_equal presenter.dates, presenter.visible_dates
+    assert_equal 365, presenter.visible_dates.size
+  end
+
+  test "query_params includes show_all only when active" do
+    hidden = TimelinePresenter.new(year: 2026, show_all: false)
+    shown = TimelinePresenter.new(year: 2026, show_all: true)
+
+    assert_equal({}, hidden.query_params)
+    assert_equal({ show_all: 1 }, shown.query_params)
+  end
+
   test "iso_week_day_label uses ISO week and Monday-based weekday" do
     presenter = TimelinePresenter.new(year: 2026)
     monday = Date.new(2026, 8, 17)
@@ -116,14 +165,14 @@ class TimelinePresenterTest < ActiveSupport::TestCase
     assert_equal 2024, first.next_year
   end
 
-  test "parse_year falls back for invalid or unavailable years" do
+  test "parse_year falls back for invalid years and allows empty in-range years" do
     create_entry!(title: "A", occurred_on: Date.new(2024, 1, 1), primary: @person)
     today = Date.new(2026, 8, 18)
 
     assert_equal 2026, TimelinePresenter.parse_year("2026", today: today)
     assert_equal 2024, TimelinePresenter.parse_year("2024", today: today)
+    assert_equal 1900, TimelinePresenter.parse_year("1900", today: today)
     assert_equal 2026, TimelinePresenter.parse_year("foo", today: today)
-    assert_equal 2026, TimelinePresenter.parse_year("1900", today: today)
     assert_equal 2026, TimelinePresenter.parse_year("999999999", today: today)
     assert_equal 2026, TimelinePresenter.parse_year("-1", today: today)
   end
@@ -153,7 +202,7 @@ class TimelinePresenterTest < ActiveSupport::TestCase
 
     ActiveSupport::Notifications.subscribed(callback, "sql.active_record") do
       presenter.entries_by_date
-      presenter.dates.each { |date| presenter.entries_for(date) }
+      presenter.visible_dates.each { |date| presenter.entries_for(date) }
     end
 
     assert_equal 1, queries.size, "expected one entries query, got: #{queries}"
