@@ -69,7 +69,7 @@ class SearchService
                 .limit(MAX_RESULTS + 1)
                 .to_a
 
-    [records.first(MAX_RESULTS), records.size > MAX_RESULTS]
+    [ records.first(MAX_RESULTS), records.size > MAX_RESULTS ]
   end
 
   def matching_entries

@@ -5,9 +5,9 @@ Rails.application.routes.draw do
   get "/homepage", to: "homepage#show", as: :homepage
   get "/timeline/:year", to: "timeline#show", as: :timeline
 
-  resources :people, only: [:index, :show, :update]
+  resources :people, only: [ :index, :show, :update ]
 
-  resources :entries, only: [:new, :create, :show, :edit, :update] do
+  resources :entries, only: [ :new, :create, :show, :edit, :update ] do
     collection do
       get :preview, action: :show_preview
       post :preview, action: :create_preview

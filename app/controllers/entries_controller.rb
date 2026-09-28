@@ -1,5 +1,5 @@
 class EntriesController < ApplicationController
-  before_action :set_entry, only: [:show, :edit, :update, :create_preview_update]
+  before_action :set_entry, only: [ :show, :edit, :update, :create_preview_update ]
 
   def new
     @draft = if session[:entry_draft]

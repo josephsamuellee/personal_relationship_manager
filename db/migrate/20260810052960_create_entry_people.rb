@@ -7,6 +7,6 @@ class CreateEntryPeople < ActiveRecord::Migration[7.2]
 
       t.timestamps
     end
-    add_index :entry_people, [:entry_id, :person_id], unique: true
+    add_index :entry_people, [ :entry_id, :person_id ], unique: true
   end
 end

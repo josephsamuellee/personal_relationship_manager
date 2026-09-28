@@ -7,7 +7,7 @@ class PendingMigrationExceptionsApp
     exception = env["action_dispatch.exception"]
     if exception.is_a?(ActiveRecord::PendingMigrationError)
       html = Rails.root.join("public/pending_migration.html").read
-      [503, { "Content-Type" => "text/html; charset=utf-8", "Retry-After" => "60" }, [html]]
+      [ 503, { "Content-Type" => "text/html; charset=utf-8", "Retry-After" => "60" }, [ html ] ]
     else
       @public_exceptions.call(env)
     end

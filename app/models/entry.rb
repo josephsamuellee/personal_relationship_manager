@@ -22,7 +22,7 @@ class Entry < ApplicationRecord
   end
 
   def people_in_display_order
-    [primary_person, *entry_people.map(&:person)].compact.uniq
+    [ primary_person, *entry_people.map(&:person) ].compact.uniq
   end
 
   private

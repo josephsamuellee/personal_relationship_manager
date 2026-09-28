@@ -39,7 +39,7 @@ class SearchServiceTest < ActiveSupport::TestCase
     titles = results[:entries].map(&:title)
 
     assert_equal 3, titles.size
-    assert_equal ["Beach Trip", "Trip Planning", "Joshua Tree Trip"], titles
+    assert_equal [ "Beach Trip", "Trip Planning", "Joshua Tree Trip" ], titles
     assert results[:more_entries]
   end
 
@@ -57,7 +57,7 @@ class SearchServiceTest < ActiveSupport::TestCase
 
     assert_equal 5, entries.size
     assert_equal(
-      ["Beach Trip", "Trip Planning", "Joshua Tree Trip", "Christmas Trip", "Summer Trip"],
+      [ "Beach Trip", "Trip Planning", "Joshua Tree Trip", "Christmas Trip", "Summer Trip" ],
       entries.map(&:title)
     )
   end
@@ -73,7 +73,7 @@ class SearchServiceTest < ActiveSupport::TestCase
       occurred_on: Date.new(2026, 4, 1),
       primary: @andrew,
       body: "A walk with [[Andrew]]",
-      tags: ["trip"]
+      tags: [ "trip" ]
     )
     body_match = create_entry!(
       title: "Planning notes",
@@ -91,7 +91,7 @@ class SearchServiceTest < ActiveSupport::TestCase
     preview_titles = SearchService.new("trip").results[:entries].map(&:title)
     full_titles = SearchService.new("trip").all_entries.map(&:title)
 
-    assert_equal [title_match.title, tag_match.title, body_match.title], full_titles
+    assert_equal [ title_match.title, tag_match.title, body_match.title ], full_titles
     assert_equal full_titles.first(preview_titles.size), preview_titles
     assert_not_includes full_titles, "Unrelated lunch"
     assert_not_includes preview_titles, "Unrelated lunch"
@@ -113,7 +113,7 @@ class SearchServiceTest < ActiveSupport::TestCase
 
     titles = SearchService.new("trip").all_entries.map(&:title)
 
-    assert_equal ["Newer trip", "Older trip"], titles
+    assert_equal [ "Newer trip", "Older trip" ], titles
   end
 
   test "people search results remain unchanged by entry search expansion" do
@@ -122,16 +122,16 @@ class SearchServiceTest < ActiveSupport::TestCase
     people = SearchService.new("andrew").results[:people]
 
     assert_equal 3, people.size
-    assert_equal ["Andrew", "Andrew Hsiao", "Andrew Wang"], people.map(&:name)
+    assert_equal [ "Andrew", "Andrew Hsiao", "Andrew Wang" ], people.map(&:name)
   end
 
   private
 
   def create_trip_entries
-    create_entry!(title: "Beach Trip", occurred_on: Date.new(2026, 8, 12), primary: @andrew, people: [@andrew, @sarah])
+    create_entry!(title: "Beach Trip", occurred_on: Date.new(2026, 8, 12), primary: @andrew, people: [ @andrew, @sarah ])
     create_entry!(title: "Trip Planning", occurred_on: Date.new(2026, 7, 3), primary: @andrew)
-    create_entry!(title: "Joshua Tree Trip", occurred_on: Date.new(2026, 5, 15), primary: @sarah, people: [@sarah, @bret])
-    create_entry!(title: "Christmas Trip", occurred_on: Date.new(2025, 12, 20), primary: @andrew, people: [@andrew, @bret])
+    create_entry!(title: "Joshua Tree Trip", occurred_on: Date.new(2026, 5, 15), primary: @sarah, people: [ @sarah, @bret ])
+    create_entry!(title: "Christmas Trip", occurred_on: Date.new(2025, 12, 20), primary: @andrew, people: [ @andrew, @bret ])
     create_entry!(title: "Summer Trip", occurred_on: Date.new(2025, 6, 10), primary: @andrew)
   end
 end

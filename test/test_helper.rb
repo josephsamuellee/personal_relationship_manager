@@ -6,7 +6,7 @@ class ActiveSupport::TestCase
   parallelize(workers: :number_of_processors)
 
   def create_entry!(title:, occurred_on:, primary:, people: nil, body: nil, tags: [])
-    associated = people || [primary]
+    associated = people || [ primary ]
     entry = Entry.create!(
       title: title,
       occurred_on: occurred_on,
