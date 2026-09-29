@@ -17,7 +17,7 @@ class EntryTest < ActiveSupport::TestCase
 
     entry = EntrySaver.save!(draft)
     assert_equal @andrew, entry.primary_person
-    assert_equal [@andrew, @sarah], entry.people
+    assert_equal [ @andrew, @sarah ], entry.people
   end
 
   test "shared entry appears for both people" do
@@ -57,7 +57,7 @@ class EntryTest < ActiveSupport::TestCase
     updated = EntrySaver.save!(edit_draft)
     assert_equal entry.id, updated.id
     assert_equal @sarah, updated.primary_person
-    assert_equal [@sarah], updated.people
+    assert_equal [ @sarah ], updated.people
   end
 
   test "people_in_display_order lists primary first then referenced people without duplicates" do
@@ -70,7 +70,7 @@ class EntryTest < ActiveSupport::TestCase
     entry.entry_people.create!(person: @sarah, position: 0)
     entry.entry_people.create!(person: @andrew, position: 1)
 
-    assert_equal [@andrew, @sarah], entry.people_in_display_order
+    assert_equal [ @andrew, @sarah ], entry.people_in_display_order
   end
 
   test "from_session re-resolves people after person selections change" do
@@ -87,6 +87,6 @@ class EntryTest < ActiveSupport::TestCase
 
     assert reloaded.valid_for_save?
     assert_empty reloaded.unresolved_people
-    assert_equal [@andrew.id, @sarah.id], reloaded.resolved_people_ids
+    assert_equal [ @andrew.id, @sarah.id ], reloaded.resolved_people_ids
   end
 end

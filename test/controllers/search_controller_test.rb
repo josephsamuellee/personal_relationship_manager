@@ -47,11 +47,11 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
 
     titles = css_select("table.search-entries-table tbody tr td:first-child a").map(&:text)
     assert_equal(
-      ["Beach Trip", "Trip Planning", "Joshua Tree Trip", "Christmas Trip", "Summer Trip"],
+      [ "Beach Trip", "Trip Planning", "Joshua Tree Trip", "Christmas Trip", "Summer Trip" ],
       titles
     )
     dates = css_select("table.search-entries-table tbody tr td:nth-child(2)").map { |td| td.text.strip }
-    assert_equal ["2026-08-12", "2026-07-03", "2026-05-15", "2025-12-20", "2025-06-10"], dates
+    assert_equal [ "2026-08-12", "2026-07-03", "2026-05-15", "2025-12-20", "2025-06-10" ], dates
   end
 
   test "people column lists primary person first then referenced people without duplicates" do
@@ -59,7 +59,7 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
       title: "Group Trip",
       occurred_on: Date.new(2026, 8, 1),
       primary: @andrew,
-      people: [@andrew, @sarah, @bret]
+      people: [ @andrew, @sarah, @bret ]
     )
 
     get search_entries_path, params: { q: "trip" }
@@ -67,13 +67,13 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     row = css_select("table.search-entries-table tbody tr").first
     people_cell = row.css("td")[2]
-    names = people_cell.css("a").map { |link| [link.text, link["href"]] }
+    names = people_cell.css("a").map { |link| [ link.text, link["href"] ] }
 
     assert_equal(
       [
-        ["Andrew", person_path(@andrew)],
-        ["Sarah T", person_path(@sarah)],
-        ["Bret T", person_path(@bret)]
+        [ "Andrew", person_path(@andrew) ],
+        [ "Sarah T", person_path(@sarah) ],
+        [ "Bret T", person_path(@bret) ]
       ],
       names
     )
@@ -108,10 +108,10 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
 
   def create_trip_entries
     {
-      beach: create_entry!(title: "Beach Trip", occurred_on: Date.new(2026, 8, 12), primary: @andrew, people: [@andrew, @sarah]),
+      beach: create_entry!(title: "Beach Trip", occurred_on: Date.new(2026, 8, 12), primary: @andrew, people: [ @andrew, @sarah ]),
       planning: create_entry!(title: "Trip Planning", occurred_on: Date.new(2026, 7, 3), primary: @andrew),
-      joshua: create_entry!(title: "Joshua Tree Trip", occurred_on: Date.new(2026, 5, 15), primary: @sarah, people: [@sarah, @bret]),
-      christmas: create_entry!(title: "Christmas Trip", occurred_on: Date.new(2025, 12, 20), primary: @andrew, people: [@andrew, @bret]),
+      joshua: create_entry!(title: "Joshua Tree Trip", occurred_on: Date.new(2026, 5, 15), primary: @sarah, people: [ @sarah, @bret ]),
+      christmas: create_entry!(title: "Christmas Trip", occurred_on: Date.new(2025, 12, 20), primary: @andrew, people: [ @andrew, @bret ]),
       summer: create_entry!(title: "Summer Trip", occurred_on: Date.new(2025, 6, 10), primary: @andrew)
     }
   end

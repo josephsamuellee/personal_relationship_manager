@@ -20,7 +20,7 @@ class PersonResolver
     return Result.new(status: :unknown, people: [], query: query) if query.blank?
 
     exact = Person.where("LOWER(name) = ?", query.downcase).order(:name).to_a
-    return Result.new(status: :exact, people: [exact.first], query: query) if exact.size == 1
+    return Result.new(status: :exact, people: [ exact.first ], query: query) if exact.size == 1
     return Result.new(status: :ambiguous, people: exact, query: query) if exact.size > 1
 
     Result.new(status: :unknown, people: [], query: query)
