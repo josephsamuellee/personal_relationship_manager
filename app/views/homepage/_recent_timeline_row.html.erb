@@ -1,7 +1,10 @@
 <% entries = @presenter.recent_timeline_entries[date] || [] %>
 <div class="recent-timeline-row<%= " today" if @presenter.today?(date) %>">
   <span class="recent-timeline-week"><%= @presenter.week_label(date) %></span>
-  <span class="recent-timeline-day"><%= @presenter.weekday_letter(date) %></span>
+  <%= link_to @presenter.weekday_letter(date),
+              new_entry_path_for_date(date),
+              class: "recent-timeline-day recent-timeline-day-link",
+              aria: { label: "New entry for #{date.strftime("%A, %-d %b %Y")}" } %>
   <span class="recent-timeline-content">
     <% if entries.any? %>
       <%= safe_join(entries.map { |entry| link_to(entry.title, entry_path(entry)) }, ", ") %>

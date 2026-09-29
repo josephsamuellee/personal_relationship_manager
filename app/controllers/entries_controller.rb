@@ -5,8 +5,9 @@ class EntriesController < ApplicationController
     @draft = if session[:entry_draft]
       EntryDraft.from_session(session[:entry_draft])
     else
-      EntryDraft.new(raw_date: Time.zone.today.strftime("%d %b %Y"))
+      EntryDraft.new(raw_date: initial_raw_date)
     end
+    @autofocus_title = params[:occurred_on].present?
   end
 
   def create
@@ -143,6 +144,15 @@ class EntriesController < ApplicationController
     @draft = draft
     @entry = Entry.find_by(id: draft.entry_id) if draft.entry_id.present?
     @relationship_diff = EntryRelationshipDiff.new(@entry, draft) if @entry
+  end
+
+  def initial_raw_date
+    return Time.zone.today.strftime("%d %b %Y") if params[:occurred_on].blank?
+
+    date = Date.iso8601(params[:occurred_on])
+    date.strftime("%d %b %Y")
+  rescue ArgumentError
+    Time.zone.today.strftime("%d %b %Y")
   end
 
   def preview_notice_for(draft)

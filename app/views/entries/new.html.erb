@@ -3,7 +3,10 @@
 <%= form_with url: preview_entries_path, method: :post, class: "entry-form", data: { controller: "entry-date" } do |form| %>
   <div class="field">
     <%= label_tag :entry_title, "Title" %>
-    <%= text_field_tag "entry[title]", @draft.title, required: true %>
+    <%= text_field_tag "entry[title]",
+                       @draft.title,
+                       required: true,
+                       data: (@autofocus_title ? { controller: "autofocus" } : {}) %>
   </div>
 
   <div class="field">
