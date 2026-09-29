@@ -122,6 +122,18 @@ class HomepageControllerTest < ActionDispatch::IntegrationTest
       assert_select ".recent-timeline-row.today .recent-timeline-week", text: "W34"
       assert_select "a[href=?]", entry_path(monday_entry), text: "Family dinner"
       assert_select ".recent-timeline-row.today a[href=?]", entry_path(today_entry), text: "Airport trip"
+      assert_select ".recent-timeline-day-link[href=?]", new_entry_path(occurred_on: "2026-08-11"), text: "T"
+      assert_select ".recent-timeline-day-link[href=?]", new_entry_path(occurred_on: "2026-08-18"), text: "T"
+    end
+  end
+
+  test "recent timeline day letters link to new entry for that date" do
+    travel_to Time.zone.local(2026, 9, 28, 12, 0, 0) do
+      get homepage_path
+
+      assert_response :success
+      assert_select ".recent-timeline-day-link[href=?]", new_entry_path(occurred_on: "2026-09-25"), text: "F"
+      assert_select ".recent-timeline-day-link[href=?]", new_entry_path(occurred_on: "2026-09-28"), text: "M"
     end
   end
 

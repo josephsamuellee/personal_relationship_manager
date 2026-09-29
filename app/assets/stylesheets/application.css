@@ -120,6 +120,16 @@ input[type="submit"] {
   color: var(--muted);
 }
 
+.recent-timeline-day-link {
+  text-decoration: none;
+}
+
+.recent-timeline-day-link:hover,
+.recent-timeline-day-link:focus-visible {
+  text-decoration: underline;
+  color: var(--accent);
+}
+
 .recent-timeline-content {
   flex: 1;
   min-width: 0;
