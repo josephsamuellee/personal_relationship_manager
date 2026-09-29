@@ -1,3 +1,4 @@
+<% save_success_banner = flash[:notice] == "Entry saved." %>
 <!DOCTYPE html>
 <html data-theme="<%= current_theme %>">
   <head>
@@ -10,9 +11,12 @@
     <%= javascript_importmap_tags %>
   </head>
 
-  <body class="app-body">
+  <body class="app-body<%= " has-save-banner" if save_success_banner %>">
     <% if flash[:notice] %>
-      <div class="flash flash-notice"><%= flash[:notice] %></div>
+      <%= tag.div class: ["flash", "flash-notice", ("flash-save-success" if save_success_banner)],
+            data: (save_success_banner ? { controller: "save-banner" } : {}) do %>
+        <%= flash[:notice] %>
+      <% end %>
     <% end %>
     <% if flash[:alert] %>
       <div class="flash flash-alert"><%= flash[:alert] %></div>

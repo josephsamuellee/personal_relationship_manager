@@ -657,6 +657,13 @@ input[type="submit"] {
   top: 1rem;
   left: 1rem;
   z-index: 100;
+  transition: top 0.2s ease;
+}
+
+/* Resting Home stays at top: 1rem. Only the successful-save banner shifts it
+   below the green banner so the notice text is fully readable above the button. */
+body.has-save-banner .floating-nav-top {
+  top: 4rem;
 }
 
 .floating-search {
