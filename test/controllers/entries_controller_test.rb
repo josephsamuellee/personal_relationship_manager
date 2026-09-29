@@ -1,7 +1,6 @@
 require "test_helper"
 
 class EntriesControllerTest < ActionDispatch::IntegrationTest
-<<<<<<< HEAD
   setup do
     @person = Person.create!(name: "Ada Lovelace", slug: "ada-lovelace")
   end
@@ -37,7 +36,8 @@ class EntriesControllerTest < ActionDispatch::IntegrationTest
     assert_select "body.has-save-banner", count: 0
     assert_select "[data-controller=save-banner]", count: 0
     assert_select ".floating-nav-top a", text: "Home"
-=======
+  end
+
   test "new entry defaults occurred on to today" do
     travel_to Time.zone.local(2026, 9, 28, 12, 0, 0) do
       get new_entry_path
@@ -85,6 +85,5 @@ class EntriesControllerTest < ActionDispatch::IntegrationTest
       assert_select "input[name='entry[title]'][value=?]", "Draft title"
       assert_select "input[name='entry[title]'][data-controller=?]", "autofocus"
     end
->>>>>>> 08edbdb (Link homepage timeline day letters to new entry with date prefill)
   end
 end
