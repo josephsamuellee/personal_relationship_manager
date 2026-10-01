@@ -236,6 +236,37 @@ class TimelineControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "calendar date labels link to new entry for that date in filtered view" do
+    travel_to Time.zone.local(2026, 9, 28, 12, 0, 0) do
+      populated = create_entry!(title: "Parents dinner", occurred_on: Date.new(2026, 9, 27), primary: @person)
+
+      get timeline_path(year: 2026)
+
+      assert_response :success
+      assert_select ".year-timeline-cal-link[href=?]", new_entry_path(occurred_on: "2026-09-27"), text: "27Sep"
+      assert_select ".year-timeline-cal-link[href=?]", new_entry_path(occurred_on: "2026-09-28"), text: "28Sep"
+      assert_select "a[href=?]", entry_path(populated), text: "Parents dinner"
+      assert_select ".floating-actions a[href=?]", new_entry_path, text: "Add Entry"
+      assert_select ".floating-actions a[href=?]", new_entry_path(occurred_on: "2026-09-28"), count: 0
+    end
+  end
+
+  test "calendar date labels link to new entry for empty days in show all" do
+    travel_to Time.zone.local(2026, 9, 28, 12, 0, 0) do
+      populated = create_entry!(title: "Parents dinner", occurred_on: Date.new(2026, 9, 27), primary: @person)
+
+      get timeline_path(year: 2026, show_all: 1)
+
+      assert_response :success
+      assert_select ".year-timeline-cal-link[href=?]", new_entry_path(occurred_on: "2026-01-01"), text: "01Jan"
+      assert_select ".year-timeline-cal-link[href=?]", new_entry_path(occurred_on: "2026-09-01"), text: "01Sep"
+      assert_select ".year-timeline-cal-link[href=?]", new_entry_path(occurred_on: "2026-09-27"), text: "27Sep"
+      assert_select ".year-timeline-cal-link[href=?]", new_entry_path(occurred_on: "2026-09-28"), text: "28Sep"
+      assert_select "a[href=?]", entry_path(populated), text: "Parents dinner"
+      assert_select ".floating-actions a[href=?]", new_entry_path, text: "Add Entry"
+    end
+  end
+
   test "invalid year parameters redirect without crashing" do
     travel_to Time.zone.local(2026, 8, 18, 12, 0, 0) do
       get timeline_path(year: "foo")

@@ -1,8 +1,10 @@
 module TimelineHelper
-  # Renders the compact calendar date label. Kept separate so a future change can
-  # turn this into a link that opens New Journal with occurred_on pre-filled.
   def timeline_calendar_date(date, label:)
-    tag.span(label, class: "year-timeline-cal", role: "cell", data: { occurred_on: date.iso8601 })
+    link_to label,
+            new_entry_path_for_date(date),
+            class: "year-timeline-cal year-timeline-cal-link",
+            role: "cell",
+            aria: { label: "New entry for #{date.strftime("%A, %-d %b %Y")}" }
   end
 
   def timeline_year_path(year, presenter)
