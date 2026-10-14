@@ -1,0 +1,59 @@
+schema: spec-driven
+
+# Project context (optional)
+# Add only constraints that should guide OpenSpec artifacts and workflows.
+# Include constraints an agent cannot infer by reading the code.
+# Keep general project documentation and discoverable codebase facts out.
+context: |
+  PRM is a single-user personal relationship knowledge base (Rails + SQLite)
+  intended for long-term Raspberry Pi deployment. Core behavior must remain
+  useful without any AI service.
+
+  Canonical product terms are Person, Entry, and Tag. Persistence names may
+  differ; do not change user-facing Entry terminology solely because of a
+  legacy table or model name.
+
+  openspec/specs/ is the living baseline of current/intended behavior.
+  Future work should be expressed as OpenSpec changes against that baseline,
+  not silent reinterpretation of existing behavior.
+
+  When repository behavior and a baseline capability conflict: identify the
+  implementation and the applicable requirement; determine whether the repo
+  reflects a later intentional change; preserve data; report the discrepancy;
+  avoid destructive migration or architectural rewriting without an approved
+  change. Migrations, tests, and explicit later user decisions outweigh older
+  architectural recommendations.
+
+  Deferred unless a later change introduces them: AI inference, embeddings,
+  multi-user/tenancy, photo storage, PiGallery2, calendar write/import, and
+  sophisticated TODO/reminder semantics.
+
+# Per-artifact rules (optional)
+# Add custom rules for specific artifacts.
+rules:
+  proposal:
+    - State what is in scope and explicitly out of scope relative to openspec/specs/
+    - Prefer modifying an existing capability path over inventing a near-duplicate name
+    - Do not treat deferred AI, multi-user, photo, or calendar-write ideas as implied scope
+  specs:
+    - Specs describe observable behavior; avoid implementation class names as requirements
+    - Every requirement needs at least one #### Scenario with WHEN/THEN
+    - Keep each requirement description to one behavior (prefer under 500 characters)
+  design:
+    - Preserve SQLite and Pi-class resource constraints unless the change explicitly replaces them
+    - Call out data-migration and rollback risks when touching Entries, People, or associations
+  tasks:
+    - Include verification against the affected baseline capability scenarios
+    - Prefer additive, reversible steps when changing persistence
+
+# Per-operation guidance (optional)
+# Add advisory guidance for how apply and archive work should be conducted.
+# This is separate from artifact rules above.
+operations:
+  apply:
+    guidance:
+      - Do not silently reinterpret baseline behavior; surface conflicts before changing them
+      - Preserve persistent SQLite data paths and existing associations
+  archive:
+    guidance:
+      - After archive, confirm main specs under openspec/specs/ reflect the merged baseline
