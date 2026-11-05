@@ -86,4 +86,40 @@ class EntriesControllerTest < ActionDispatch::IntegrationTest
       assert_select "input[name='entry[title]'][data-controller=?]", "autofocus"
     end
   end
+
+  test "new entry exposes compact occurred on controls and app-zone today" do
+    travel_to Time.zone.local(2026, 10, 13, 12, 0, 0) do
+      get new_entry_path
+
+      assert_response :success
+      assert_select ".occurred-on-field[data-controller=?]", "entry-date"
+      assert_select ".occurred-on-field[data-entry-date-today-value=?]", "2026-10-13"
+      assert_select ".occurred-on-field[data-entry-date-today-display-value=?]", "13 Oct 2026"
+      assert_select ".occurred-on-row label", text: "Occurred On"
+      assert_select ".occurred-on-row input[name='entry[raw_date]']"
+      assert_select ".occurred-on-row button[data-action=?]", "entry-date#useToday", text: "Use Today"
+      assert_select ".occurred-on-row button[data-action=?]", "entry-date#togglePicker", text: "Pick Date"
+      assert_select ".occurred-on-error[data-entry-date-target=?]", "error"
+      assert_select ".date-picker[data-entry-date-target=?]", "picker"
+    end
+  end
+
+  test "edit entry exposes the same occurred on picker controls without saving on GET" do
+    entry = create_entry!(
+      title: "Existing",
+      occurred_on: Date.new(2020, 3, 15),
+      primary: @person,
+      body: "Note with [[Ada Lovelace]]."
+    )
+
+    assert_no_changes -> { entry.reload.occurred_on } do
+      get edit_entry_path(entry)
+    end
+
+    assert_response :success
+    assert_select ".occurred-on-field[data-controller=?]", "entry-date"
+    assert_select "input[name='entry[raw_date]'][value=?]", "15 Mar 2020"
+    assert_select ".occurred-on-row button[data-action=?]", "entry-date#useToday", text: "Use Today"
+    assert_select ".occurred-on-row button[data-action=?]", "entry-date#togglePicker", text: "Pick Date"
+  end
 end

@@ -1,0 +1,31 @@
+<%# locals: raw_date: %>
+<% today = Time.zone.today %>
+<div class="field occurred-on-field"
+     data-controller="entry-date"
+     data-entry-date-today-value="<%= today.iso8601 %>"
+     data-entry-date-today-display-value="<%= today.strftime("%d %b %Y") %>">
+  <div class="occurred-on-row">
+    <%= label_tag :entry_raw_date, "Occurred On", class: "occurred-on-label" %>
+    <%= text_field_tag "entry[raw_date]",
+                       raw_date,
+                       required: true,
+                       class: "occurred-on-input",
+                       data: { entry_date_target: "input" },
+                       autocomplete: "off" %>
+    <button type="button"
+            class="occurred-on-button"
+            data-action="entry-date#useToday">Use Today</button>
+    <button type="button"
+            class="occurred-on-button"
+            data-action="entry-date#togglePicker"
+            data-entry-date-target="pickButton"
+            aria-haspopup="dialog"
+            aria-expanded="false">Pick Date</button>
+  </div>
+  <p class="occurred-on-error hint" data-entry-date-target="error" hidden></p>
+  <div class="date-picker"
+       data-entry-date-target="picker"
+       hidden
+       role="dialog"
+       aria-label="Choose occurred on date"></div>
+</div>

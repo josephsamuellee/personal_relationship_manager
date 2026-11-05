@@ -1,6 +1,6 @@
 <h1>New Entry</h1>
 
-<%= form_with url: preview_entries_path, method: :post, class: "entry-form", data: { controller: "entry-date" } do |form| %>
+<%= form_with url: preview_entries_path, method: :post, class: "entry-form" do |form| %>
   <div class="field">
     <%= label_tag :entry_title, "Title" %>
     <%= text_field_tag "entry[title]",
@@ -9,11 +9,7 @@
                        data: (@autofocus_title ? { controller: "autofocus" } : {}) %>
   </div>
 
-  <div class="field">
-    <%= label_tag :entry_raw_date, "Occurred On" %>
-    <%= text_field_tag "entry[raw_date]", @draft.raw_date, required: true, data: { entry_date_target: "input" } %>
-    <button type="button" data-action="entry-date#useToday">Use today</button>
-  </div>
+  <%= render "entries/occurred_on_field", raw_date: @draft.raw_date %>
 
   <div class="field">
     <%= label_tag :entry_body_markdown, "Markdown Body" %>

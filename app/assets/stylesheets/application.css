@@ -520,6 +520,146 @@ input[type="submit"] {
   color: var(--text);
 }
 
+.occurred-on-field {
+  position: relative;
+}
+
+.occurred-on-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: 100%;
+}
+
+.occurred-on-row .occurred-on-label {
+  display: inline;
+  margin-bottom: 0;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.occurred-on-row .occurred-on-input {
+  width: auto;
+  flex: 1 1 8rem;
+  min-width: 7rem;
+  max-width: 12rem;
+}
+
+.occurred-on-button {
+  flex: 0 0 auto;
+  padding: 0.4rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.occurred-on-button:hover {
+  border-color: var(--accent);
+}
+
+.occurred-on-error {
+  color: var(--danger);
+  margin: 0.35rem 0 0;
+}
+
+.occurred-on-error[hidden],
+.date-picker[hidden] {
+  display: none !important;
+}
+
+.date-picker {
+  margin-top: 0.5rem;
+  padding: 0.75rem;
+  max-width: 22rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  box-shadow: 0 4px 16px var(--overlay-backdrop);
+  z-index: 5;
+}
+
+.date-picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.35rem;
+  margin-bottom: 0.5rem;
+}
+
+.date-picker-header .date-picker-month-label {
+  font-weight: 600;
+  flex: 1 1 auto;
+  text-align: center;
+}
+
+.date-picker-nav,
+.date-picker-year {
+  flex: 0 0 auto;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.date-picker-year {
+  max-width: 5.5rem;
+}
+
+.date-picker-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 0.875rem;
+}
+
+.date-picker-table th,
+.date-picker-table td {
+  text-align: center;
+  padding: 0.2rem;
+}
+
+.date-picker-week {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  width: 2.25rem;
+}
+
+.date-picker-day {
+  width: 100%;
+  min-width: 2rem;
+  padding: 0.35rem 0;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.date-picker-day:hover {
+  border-color: var(--accent);
+  background: var(--accent-light);
+}
+
+.date-picker-day.is-adjacent {
+  color: var(--muted);
+  opacity: 0.65;
+}
+
+.date-picker-day.is-selected {
+  border-color: var(--accent);
+  background: var(--accent-light);
+  font-weight: 700;
+}
+
 .search-page-form input[type="text"],
 .search-page-form input[type="search"] {
   padding: 0.5rem;
