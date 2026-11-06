@@ -45,8 +45,17 @@
               id: "person_favorite_slot" %>
       </div>
 
-      <div data-about-editor-target="editor">
-        <%= form.text_area :about_markdown, rows: 8, class: "about-textarea", data: { about_editor_target: "textarea" } %>
+      <div class="field markdown-editor-field"
+           data-controller="markdown-editor"
+           data-markdown-editor-theme-value="<%= current_theme %>"
+           data-fallback-class="about-textarea"
+           data-about-editor-target="editor">
+        <div data-markdown-editor-target="mount" class="markdown-editor-mount">
+          <%= form.text_area :about_markdown,
+                             rows: 8,
+                             class: "about-textarea",
+                             data: { markdown_editor_target: "fallback" } %>
+        </div>
       </div>
       <div class="about-preview hidden" data-about-editor-target="preview">
         <%= render_markdown(@person.about_markdown) %>

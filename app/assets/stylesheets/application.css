@@ -1017,3 +1017,29 @@ body.has-save-banner .floating-nav-top {
     display: none;
   }
 }
+
+/* OverType Markdown editor mounts (Entry body + Person about) */
+.markdown-editor-mount {
+  width: 100%;
+  max-width: 100%;
+  min-height: 12rem;
+  overflow-x: auto;
+}
+
+.markdown-editor-field .overtype-container {
+  width: 100%;
+  max-width: 100%;
+  min-height: 12rem;
+}
+
+.markdown-editor-field .overtype-wrapper,
+.markdown-editor-field .overtype-input,
+.markdown-editor-field .overtype-preview {
+  max-width: 100%;
+}
+
+.markdown-editor-field .about-textarea,
+.markdown-editor-mount > textarea {
+  width: 100%;
+  min-height: 12rem;
+}
