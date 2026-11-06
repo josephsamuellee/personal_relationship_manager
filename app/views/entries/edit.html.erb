@@ -10,10 +10,13 @@
 
   <%= render "entries/occurred_on_field", raw_date: @draft.raw_date %>
 
-  <div class="field">
-    <%= label_tag :entry_body_markdown, "Markdown Body" %>
-    <%= text_area_tag "entry[body_markdown]", @draft.body_markdown, rows: 12, required: true %>
-  </div>
+  <%= render "shared/markdown_editor_field",
+             name: "entry[body_markdown]",
+             value: @draft.body_markdown,
+             label: "Markdown Body",
+             label_for: "entry_body_markdown",
+             rows: 12,
+             required: true %>
 
   <%= submit_tag "Preview" %>
 <% end %>

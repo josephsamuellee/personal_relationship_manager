@@ -1,0 +1,32 @@
+<%#
+  locals:
+    name: - form field name (e.g. "entry[body_markdown]")
+    value: - initial Markdown
+    label: - visible label text
+    label_for: - id for label/input
+    rows: - textarea rows (default 12)
+    required: - boolean (default false)
+    hint: - optional hint HTML/text
+    fallback_class: - optional class on native textarea
+%>
+<% rows = local_assigns.fetch(:rows, 12) %>
+<% required = local_assigns.fetch(:required, false) %>
+<% fallback_class = local_assigns.fetch(:fallback_class, "") %>
+<div class="field markdown-editor-field"
+     data-controller="markdown-editor"
+     data-markdown-editor-theme-value="<%= current_theme %>"
+     data-fallback-class="<%= fallback_class %>">
+  <%= label_tag label_for, label %>
+  <div data-markdown-editor-target="mount" class="markdown-editor-mount">
+    <%= text_area_tag name,
+                      value,
+                      id: label_for,
+                      rows: rows,
+                      required: required,
+                      class: fallback_class,
+                      data: { markdown_editor_target: "fallback" } %>
+  </div>
+  <% if local_assigns[:hint].present? %>
+    <p class="hint"><%= hint %></p>
+  <% end %>
+</div>

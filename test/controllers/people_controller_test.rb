@@ -33,6 +33,43 @@ class PeopleControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "person about uses markdown editor mount and keeps preview toggle" do
+    @andrew.update!(about_markdown: "Likes hiking.\n")
+    get person_path(@andrew)
+
+    assert_response :success
+    assert_select ".markdown-editor-field[data-controller=?]", "markdown-editor"
+    assert_select "textarea[name='person[about_markdown]'][data-markdown-editor-target=?]", "fallback"
+    assert_select "textarea[name='person[about_markdown]']", text: "Likes hiking.\n"
+    assert_select "button[data-action=?]", "about-editor#togglePreview", text: "Preview"
+    assert_select "input[type=submit][value=?]", "Save About"
+  end
+
+  test "person about markdown editor theme value follows light and dark settings" do
+    Setting.update_theme("light")
+    get person_path(@andrew)
+    assert_response :success
+    assert_select ".markdown-editor-field[data-markdown-editor-theme-value=?]", "light"
+
+    Setting.update_theme("dark")
+    get person_path(@andrew)
+    assert_response :success
+    assert_select ".markdown-editor-field[data-markdown-editor-theme-value=?]", "dark"
+  end
+
+  test "about markdown is restored after a failed favorite assignment" do
+    about = "Keep this about text.\n"
+
+    patch person_path(@andrew), params: {
+      person: { about_markdown: about, favorite_slot: "9" }
+    }
+
+    assert_response :unprocessable_entity
+    assert_select "textarea[name='person[about_markdown]']", text: about
+    assert_select ".markdown-editor-field[data-controller=?]", "markdown-editor"
+    assert_select "button[data-action=?]", "about-editor#togglePreview", text: "Preview"
+  end
+
   test "assigning person to slot 1 and saving persists the assignment" do
     patch person_path(@andrew), params: {
       person: { about_markdown: "Notes", favorite_slot: "1" }

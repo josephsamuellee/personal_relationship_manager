@@ -122,4 +122,66 @@ class EntriesControllerTest < ActionDispatch::IntegrationTest
     assert_select ".occurred-on-row button[data-action=?]", "entry-date#useToday", text: "Use Today"
     assert_select ".occurred-on-row button[data-action=?]", "entry-date#togglePicker", text: "Pick Date"
   end
+
+  test "new and edit entry mount the markdown editor field for body markdown" do
+    get new_entry_path
+    assert_response :success
+    assert_select ".markdown-editor-field[data-controller=?]", "markdown-editor"
+    assert_select "textarea[name='entry[body_markdown]'][data-markdown-editor-target=?]", "fallback"
+    assert_select "textarea[name='entry[body_markdown]'][required]"
+
+    entry = create_entry!(
+      title: "Existing",
+      occurred_on: Date.new(2020, 3, 15),
+      primary: @person,
+      body: "Dinner with [[Ada Lovelace]].\n\n#dinner\n"
+    )
+    get edit_entry_path(entry)
+    assert_response :success
+    assert_select ".markdown-editor-field[data-controller=?]", "markdown-editor"
+    assert_select "textarea[name='entry[body_markdown]']", text: "Dinner with [[Ada Lovelace]].\n\n#dinner\n"
+  end
+
+  test "markdown editor theme value follows light and dark settings" do
+    Setting.update_theme("light")
+    get new_entry_path
+    assert_response :success
+    assert_select ".markdown-editor-field[data-markdown-editor-theme-value=?]", "light"
+
+    Setting.update_theme("dark")
+    get new_entry_path
+    assert_response :success
+    assert_select ".markdown-editor-field[data-markdown-editor-theme-value=?]", "dark"
+  end
+
+  test "application.js does not eagerly import overtype" do
+    source = Rails.root.join("app/javascript/application.js").read
+    refute_match(/\bovertype\b/, source)
+  end
+
+  test "preview preserves wiki links hashtags and trailing newlines for no-op body" do
+    body = "Dinner with [[Ada Lovelace]].\n\n#church\n"
+    entry = create_entry!(
+      title: "Existing",
+      occurred_on: Date.new(2020, 3, 15),
+      primary: @person,
+      body: body
+    )
+
+    post preview_entry_path(entry), params: {
+      entry: {
+        entry_id: entry.id,
+        title: entry.title,
+        raw_date: entry.occurred_on.strftime("%d %b %Y"),
+        body_markdown: body
+      }
+    }
+    assert_redirected_to preview_entries_path
+    follow_redirect!
+
+    draft = session[:entry_draft]
+    assert_equal body, draft["body_markdown"]
+    assert_includes draft["parsed_people"], "Ada Lovelace"
+    assert_includes draft["parsed_tags"], "church"
+  end
 end
