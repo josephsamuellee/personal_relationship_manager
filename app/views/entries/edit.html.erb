@@ -1,6 +1,16 @@
 <h1>Edit Entry</h1>
 
-<%= form_with url: preview_entry_path(@entry), method: :post, class: "entry-form" do |form| %>
+<% if @draft&.validation_errors&.any? %>
+  <div class="flash flash-alert" role="alert">
+    <ul>
+      <% @draft.validation_errors.each do |error| %>
+        <li><%= error %></li>
+      <% end %>
+    </ul>
+  </div>
+<% end %>
+
+<%= form_with url: entry_path(@entry), method: :patch, class: "entry-form" do |form| %>
   <%= hidden_field_tag "entry[entry_id]", @entry.id %>
 
   <div class="field">
@@ -18,5 +28,5 @@
              rows: 12,
              required: true %>
 
-  <%= submit_tag "Preview" %>
+  <%= submit_tag "Save", data: { turbo_submits_with: "Saving..." } %>
 <% end %>
