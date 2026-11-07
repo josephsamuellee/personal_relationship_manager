@@ -6,7 +6,7 @@ A lightweight, private, single-user relationship knowledge server built with Rai
 
 - Journal entries with `[[Person]]` wiki links and `#tags`
 - Person pages with proportional timeline, about section, and recent entries
-- Homepage with recent timeline, calendar embed, historical lookback, and random reminders
+- Homepage with recent timeline, Upcoming Calendar (read-only Google Calendar), historical lookback, and random reminders
 - Deterministic search across people, dates, and entries
 - Preview-before-save entry workflow with person resolution
 
@@ -35,10 +35,30 @@ Copy `.env.example` to `.env` and set:
 |----------|-------------|
 | `APP_TIME_ZONE` | Application timezone (default: `America/Los_Angeles`) |
 | `DATABASE_PATH` | SQLite file path for persistence |
-| `GOOGLE_CALENDAR_EMBED_URL` | Google Calendar iframe embed URL |
 | `SECRET_KEY_BASE` | Required in production |
+| `GOOGLE_OAUTH_CLIENT_ID` | Google OAuth Web client ID (Upcoming Calendar) |
+| `GOOGLE_OAUTH_CLIENT_SECRET` | Google OAuth Web client secret |
+| `GOOGLE_CALENDAR_TOKEN_PATH` | Optional path for encrypted OAuth tokens (default: `storage/google_calendar_tokens.json.enc`) |
+
+`GOOGLE_CALENDAR_EMBED_URL` is obsolete and is no longer used by Upcoming Calendar.
 
 Never commit secrets. Do not expose the service publicly without access controls (e.g. Cloudflare Tunnel with authentication).
+
+### Google Calendar (Upcoming Calendar)
+
+Upcoming Calendar is a native homepage grid (current ISO week + next week). It reads Google Calendar events asynchronously and never writes back to Google.
+
+1. In [Google Cloud Console](https://console.cloud.google.com/), create an OAuth **Web application** client.
+2. Add authorized redirect URIs:
+   - Production: `https://<your-cloudflare-tunnel-host>/google_calendar/oauth/callback`
+   - Development: `http://localhost:3000/google_calendar/oauth/callback`
+3. Set `GOOGLE_OAUTH_CLIENT_ID` and `GOOGLE_OAUTH_CLIENT_SECRET` in the environment.
+4. Optional: set `GOOGLE_CALENDAR_TOKEN_PATH` (default `storage/google_calendar_tokens.json.enc`). Tokens are encrypted at rest with `SECRET_KEY_BASE` and are never shown in Config HTML.
+5. Open **Config → Google Calendar → Connect**, complete Google consent (read-only calendar scope), then select an allowlist of calendars and save.
+
+Google's web OAuth redirect rules require HTTPS (or localhost). A plain LAN `http://192.168.x.x` host is not sufficient for Connect; use the Cloudflare Tunnel HTTPS hostname in production.
+
+Scopes requested: `https://www.googleapis.com/auth/calendar.readonly` (calendar list + events read only).
 
 ## Raspberry Pi Deployment
 
@@ -78,7 +98,7 @@ WantedBy=multi-user.target
 
 ```bash
 cp .env.example .env
-# Edit .env with SECRET_KEY_BASE and optional GOOGLE_CALENDAR_EMBED_URL
+# Edit .env with SECRET_KEY_BASE and optional Google OAuth client credentials
 
 docker compose up --build
 ```

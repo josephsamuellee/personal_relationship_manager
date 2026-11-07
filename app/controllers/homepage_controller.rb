@@ -1,6 +1,6 @@
 class HomepageController < ApplicationController
   def show
     @presenter = HomepagePresenter.new
-    @calendar = CalendarProvider.current
+    @upcoming_calendar = UpcomingCalendarPresenter.new
   end
 end

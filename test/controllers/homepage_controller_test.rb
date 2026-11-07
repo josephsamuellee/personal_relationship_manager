@@ -145,4 +145,31 @@ class HomepageControllerTest < ActionDispatch::IntegrationTest
       assert_select ".recent-timeline-see-more a[href=?]", timeline_path(year: 2026), text: "See more"
     end
   end
+
+  test "upcoming calendar renders two-week grid without waiting on Google" do
+    travel_to Time.zone.local(2026, 11, 7, 12, 0, 0) do
+      get homepage_path
+
+      assert_response :success
+      assert_select ".upcoming-calendar h2", text: "Upcoming Calendar"
+      assert_select ".upcoming-calendar[data-controller=upcoming-calendar]"
+      assert_select ".upcoming-calendar-week", count: 2
+      assert_select ".upcoming-calendar-week[data-week-label=W45] .upcoming-calendar-day", count: 7
+      assert_select ".upcoming-calendar-week[data-week-label=W46] .upcoming-calendar-day", count: 7
+      assert_select ".upcoming-calendar-day.is-today .upcoming-calendar-day-number", text: "07"
+      assert_select ".upcoming-calendar-day-number[href=?]", new_entry_path(occurred_on: "2026-11-12"), text: "12"
+      assert_select "iframe.calendar-embed", count: 0
+      assert_select ".favorite-people h2", text: "Favorite People"
+      assert_select ".recent-timeline", count: 1
+    end
+  end
+
+  test "upcoming calendar includes past days of the current ISO week" do
+    travel_to Time.zone.local(2026, 11, 7, 12, 0, 0) do
+      get homepage_path
+
+      assert_select ".upcoming-calendar-week[data-week-label=W45] .upcoming-calendar-day-number", text: "02"
+      assert_select ".upcoming-calendar-week[data-week-label=W45] .upcoming-calendar-day-number", text: "06"
+    end
+  end
 end
