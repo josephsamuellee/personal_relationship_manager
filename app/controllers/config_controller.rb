@@ -5,6 +5,8 @@ class ConfigController < ApplicationController
     @google_status = GoogleCalendar::Oauth.status
     @google_allowlist = Setting.google_calendar_allowlist
     @google_calendars = load_google_calendars
+    @google_oauth_redirect_uri = "#{request.base_url}/google_calendar/oauth/callback"
+    @google_oauth_host_ok_for_redirect = request.ssl? || request.local?
   end
 
   def update

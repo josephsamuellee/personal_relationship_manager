@@ -1065,6 +1065,63 @@ body.has-save-banner .floating-nav-top {
   border-bottom: 1px solid var(--border);
 }
 
+.google-calendar-setup {
+  margin-top: 1rem;
+  max-width: 42rem;
+}
+
+.google-calendar-setup-steps {
+  margin: 0.75rem 0 1rem;
+  padding-left: 1.25rem;
+}
+
+.google-calendar-setup-steps > li {
+  margin-bottom: 1rem;
+}
+
+.google-calendar-setup-steps > li > p {
+  margin: 0.35rem 0 0;
+}
+
+.google-calendar-setup-code {
+  margin: 0.5rem 0;
+  padding: 0.75rem 0.9rem;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+  font-size: 0.85rem;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.google-calendar-setup-warning {
+  margin: 0.5rem 0 0;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--warning-border);
+  border-radius: 4px;
+  background: var(--warning-bg);
+}
+
+.google-calendar-setup-details {
+  margin-top: 1rem;
+}
+
+.google-calendar-setup-details > summary {
+  cursor: pointer;
+  color: var(--link);
+}
+
+.calendar-allowlist {
+  list-style: none;
+  margin: 0.75rem 0 1rem;
+  padding: 0;
+}
+
+.calendar-allowlist li {
+  margin: 0.35rem 0;
+}
+
 .theme-control {
   display: flex;
   align-items: center;

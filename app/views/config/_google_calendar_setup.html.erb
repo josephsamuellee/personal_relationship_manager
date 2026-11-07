@@ -1,0 +1,96 @@
+<div class="google-calendar-setup">
+  <p>
+    Upcoming Calendar reads your Google calendars (read-only) after you create a Google OAuth
+    Web client and put its credentials in the app environment. Secrets are never entered in this form.
+  </p>
+
+  <ol class="google-calendar-setup-steps">
+    <li>
+      <strong>Open Google Cloud Console</strong>
+      <p>
+        Go to
+        <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer">APIs &amp; Services → Credentials</a>
+        and sign in with the Google account that owns the calendars you want to show.
+      </p>
+    </li>
+
+    <li>
+      <strong>Enable the Google Calendar API</strong>
+      <p>
+        In
+        <a href="https://console.cloud.google.com/apis/library/calendar-json.googleapis.com" target="_blank" rel="noopener noreferrer">API Library → Google Calendar API</a>,
+        click <strong>Enable</strong> for this project if it is not already enabled.
+      </p>
+    </li>
+
+    <li>
+      <strong>Configure the OAuth consent screen</strong>
+      <p>
+        Under <strong>OAuth consent screen</strong>, choose <strong>External</strong> (or Internal if you use Google Workspace),
+        fill in the required app name and support email, and save. For personal use you can keep the app in
+        <strong>Testing</strong> and add your own Google account as a test user.
+      </p>
+    </li>
+
+    <li>
+      <strong>Create an OAuth client ID</strong>
+      <p>
+        Click <strong>Create credentials → OAuth client ID</strong>. Application type must be
+        <strong>Web application</strong>.
+      </p>
+      <p>Under <strong>Authorized redirect URIs</strong>, add exactly:</p>
+      <pre class="google-calendar-setup-code"><code><%= @google_oauth_redirect_uri %></code></pre>
+      <% unless @google_oauth_host_ok_for_redirect %>
+        <p class="google-calendar-setup-warning">
+          You are viewing Config over plain HTTP on a non-localhost host.
+          Google usually rejects that redirect. Prefer
+          <code>http://localhost:3000/google_calendar/oauth/callback</code> for local setup,
+          or your Cloudflare Tunnel HTTPS URL for the Pi
+          (for example <code>https://your-tunnel.example/google_calendar/oauth/callback</code>).
+        </p>
+      <% end %>
+      <p class="hint">
+        Also useful for local Rails: <code>http://localhost:3000/google_calendar/oauth/callback</code>
+      </p>
+    </li>
+
+    <li>
+      <strong>Copy the Client ID and Client Secret</strong>
+      <p>
+        After creating the client, copy <strong>Client ID</strong> and <strong>Client secret</strong>.
+        Do not commit them to git.
+      </p>
+    </li>
+
+    <li>
+      <strong>Put them in the app environment and restart</strong>
+      <p>For local development, add to <code>.env</code> (see <code>.env.example</code>):</p>
+      <pre class="google-calendar-setup-code"><code>GOOGLE_OAUTH_CLIENT_ID=your-client-id.apps.googleusercontent.com
+GOOGLE_OAUTH_CLIENT_SECRET=your-client-secret</code></pre>
+      <p>
+        On the Raspberry Pi systemd service, set the same variables in the unit’s
+        <code>Environment=</code> lines (or an EnvironmentFile), then restart PRM
+        (for example <code>sudo systemctl restart personal_relationship_manager</code>
+        if that is your service name).
+      </p>
+      <p class="hint">
+        Optional: <code>GOOGLE_CALENDAR_TOKEN_PATH</code> overrides where the encrypted Google
+        tokens are stored (default <code>storage/google_calendar_tokens.json.enc</code>).
+      </p>
+    </li>
+
+    <li>
+      <strong>Return here and Connect</strong>
+      <p>
+        Reload this Config page. Status should become <strong>Disconnected</strong> with a
+        <strong>Connect Google Calendar</strong> button. Click it, approve read-only calendar access,
+        then select which calendars appear on Upcoming Calendar and save.
+      </p>
+    </li>
+  </ol>
+
+  <p class="hint">
+    PRM requests only <code>https://www.googleapis.com/auth/calendar.readonly</code>
+    (list calendars and read events). It never creates, edits, deletes, or RSVPs to Google events.
+  </p>
+</div>

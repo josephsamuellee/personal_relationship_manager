@@ -117,6 +117,22 @@ class ConfigControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "google calendar section shows setup steps when credentials are missing" do
+    ENV.delete("GOOGLE_OAUTH_CLIENT_ID")
+    ENV.delete("GOOGLE_OAUTH_CLIENT_SECRET")
+
+    get config_path
+
+    assert_response :success
+    assert_select "h2", text: "Google Calendar"
+    assert_match(/Not configured/, response.body)
+    assert_select ".google-calendar-setup-steps"
+    assert_match(/GOOGLE_OAUTH_CLIENT_ID/, response.body)
+    assert_match(/GOOGLE_OAUTH_CLIENT_SECRET/, response.body)
+    assert_match(%r{/google_calendar/oauth/callback}, response.body)
+    assert_select "a[href=?]", "https://console.cloud.google.com/apis/credentials"
+  end
+
   test "google calendar section shows disconnected without tokens" do
     ENV["GOOGLE_OAUTH_CLIENT_ID"] = "id"
     ENV["GOOGLE_OAUTH_CLIENT_SECRET"] = "secret"
@@ -128,6 +144,7 @@ class ConfigControllerTest < ActionDispatch::IntegrationTest
     assert_select "h2", text: "Google Calendar"
     assert_match(/Disconnected/, response.body)
     assert_select "a", text: "Connect Google Calendar"
+    assert_select "details.google-calendar-setup-details"
   ensure
     ENV.delete("GOOGLE_OAUTH_CLIENT_ID")
     ENV.delete("GOOGLE_OAUTH_CLIENT_SECRET")

@@ -20,18 +20,36 @@
     <h2>Google Calendar</h2>
     <% case @google_status %>
     <% when :not_configured %>
-      <p class="placeholder">Set <code>GOOGLE_OAUTH_CLIENT_ID</code> and <code>GOOGLE_OAUTH_CLIENT_SECRET</code> in the environment to enable Upcoming Calendar.</p>
+      <p><strong>Status:</strong> Not configured</p>
+      <p>
+        Client ID and secret are missing from the environment.
+        Follow the steps below, then reload this page to connect.
+      </p>
+      <%= render "config/google_calendar_setup" %>
     <% when :disconnected %>
-      <p>Status: Disconnected</p>
+      <p><strong>Status:</strong> Disconnected</p>
+      <p>
+        OAuth client credentials are present. Connect your Google account next,
+        then choose which calendars appear on Upcoming Calendar.
+      </p>
       <p><%= link_to "Connect Google Calendar", google_calendar_oauth_connect_path, class: "button-primary" %></p>
+      <details class="google-calendar-setup-details">
+        <summary>Show setup reference (redirect URI and env vars)</summary>
+        <%= render "config/google_calendar_setup" %>
+      </details>
     <% when :reconnect_required %>
-      <p>Status: Reconnect required</p>
+      <p><strong>Status:</strong> Reconnect required</p>
+      <p>Stored Google authorization can no longer be used. Reconnect, or disconnect and start over.</p>
       <p><%= link_to "Reconnect Google Calendar", google_calendar_oauth_connect_path, class: "button-primary" %></p>
       <p>
         <%= button_to "Disconnect", google_calendar_oauth_disconnect_path, method: :delete, class: "button-secondary" %>
       </p>
+      <details class="google-calendar-setup-details">
+        <summary>Show setup reference (redirect URI and env vars)</summary>
+        <%= render "config/google_calendar_setup" %>
+      </details>
     <% when :connected %>
-      <p>Status: Connected</p>
+      <p><strong>Status:</strong> Connected</p>
       <p>
         <%= button_to "Disconnect", google_calendar_oauth_disconnect_path, method: :delete, class: "button-secondary" %>
       </p>
