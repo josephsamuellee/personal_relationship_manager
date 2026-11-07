@@ -1,6 +1,6 @@
 ## Purpose
 
-Defines dated journal Entries, Markdown authority, create and edit workflows with preview-before-save, transactional persistence, and the canonical Entry detail page.
+Defines dated journal Entries, Markdown authority, create and edit workflows with direct Save and person-resolution fallback, transactional persistence, and the canonical Entry detail page.
 
 ## Requirements
 

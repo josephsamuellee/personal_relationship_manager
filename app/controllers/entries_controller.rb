@@ -11,16 +11,8 @@ class EntriesController < ApplicationController
   end
 
   def create
-    draft = load_draft_from_session
-    if draft&.valid_for_save?
-      entry = EntrySaver.save!(draft)
-      session.delete(:entry_draft)
-      redirect_to entry_path(entry), notice: "Entry saved."
-    elsif draft
-      redirect_to preview_entries_path, alert: "Could not save entry. Please resolve the issues below."
-    else
-      redirect_to new_entry_path, alert: "No draft found. Please create and preview an entry first."
-    end
+    draft = draft_for_save(entry_id: nil)
+    handle_save_attempt(draft, action: :create)
   end
 
   def show_preview
@@ -64,16 +56,8 @@ class EntriesController < ApplicationController
   end
 
   def update
-    draft = load_draft_from_session
-    if draft&.valid_for_save? && draft.entry_id.to_i == @entry.id
-      entry = EntrySaver.save!(draft)
-      session.delete(:entry_draft)
-      redirect_to entry_path(entry), notice: "Entry updated."
-    elsif draft
-      redirect_to preview_entries_path, alert: "Could not update entry. Please resolve the issues below."
-    else
-      redirect_to edit_entry_path(@entry), alert: "No draft found. Please preview your changes first."
-    end
+    draft = draft_for_save(entry_id: @entry.id)
+    handle_save_attempt(draft, action: :update)
   end
 
   def resolve_person
@@ -132,6 +116,68 @@ class EntriesController < ApplicationController
 
   def entry_params
     params.require(:entry).permit(:title, :raw_date, :occurred_on, :body_markdown, :entry_id, person_selections: {})
+  end
+
+  def entry_form_submitted?
+    params[:entry].present?
+  end
+
+  def draft_for_save(entry_id:)
+    if entry_form_submitted?
+      attrs = entry_params
+      attrs = attrs.merge(entry_id: entry_id) if entry_id.present?
+      EntryDraft.from_params(attrs)
+    else
+      load_draft_from_session
+    end
+  end
+
+  def handle_save_attempt(draft, action:)
+    if draft.nil?
+      if action == :create
+        redirect_to new_entry_path, alert: "No draft found. Please create an entry first."
+      else
+        redirect_to edit_entry_path(@entry), alert: "No draft found. Please edit your entry first."
+      end
+      return
+    end
+
+    if action == :update && draft.entry_id.present? && draft.entry_id.to_i != @entry.id
+      redirect_to edit_entry_path(@entry), alert: "Draft does not match this entry."
+      return
+    end
+
+    if draft.unresolved_people.any?
+      session[:entry_draft] = draft.to_session
+      redirect_to preview_entries_path, notice: preview_notice_for(draft)
+      return
+    end
+
+    if draft.valid_for_save?
+      begin
+        entry = EntrySaver.save!(draft)
+        session.delete(:entry_draft)
+        notice = action == :create ? "Entry saved." : "Entry updated."
+        redirect_to entry_path(entry), notice: notice
+      rescue ArgumentError, ActiveRecord::ActiveRecordError => e
+        flash.now[:alert] = "Could not save entry: #{e.message}"
+        @draft = draft
+        render_save_failure(action)
+      end
+      return
+    end
+
+    @draft = draft
+    flash.now[:alert] = "Could not save entry. Please fix the issues below."
+    render_save_failure(action)
+  end
+
+  def render_save_failure(action)
+    if action == :create
+      render :new, status: :unprocessable_entity
+    else
+      render :edit, status: :unprocessable_entity
+    end
   end
 
   def load_draft_from_session

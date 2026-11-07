@@ -5,28 +5,324 @@ class EntriesControllerTest < ActionDispatch::IntegrationTest
     @person = Person.create!(name: "Ada Lovelace", slug: "ada-lovelace")
   end
 
-  test "saving a new entry shows the successful save banner above Home" do
-    post preview_entries_path, params: {
-      entry: {
-        title: "Tea with Ada",
-        raw_date: "28 Sep 2026",
-        body_markdown: "Tea with [[Ada Lovelace]]."
-      }
-    }
-    assert_redirected_to preview_entries_path
-    follow_redirect!
-    assert_select "body.has-save-banner", count: 0
-    assert_select "[data-controller=save-banner]", count: 0
+  test "new entry form posts Save to create without a Preview button" do
+    get new_entry_path
 
-    post entries_path
+    assert_response :success
+    assert_select "form.entry-form[action=?][method=?]", entries_path, "post"
+    assert_select "input[type=submit][value=?][data-turbo-submits-with=?]", "Save", "Saving..."
+    assert_select "input[type=submit][value=?]", "Preview", count: 0
+  end
+
+  test "edit entry form patches Save without a Preview button" do
+    entry = create_entry!(
+      title: "Existing",
+      occurred_on: Date.new(2020, 3, 15),
+      primary: @person,
+      body: "Note with [[Ada Lovelace]]."
+    )
+
+    get edit_entry_path(entry)
+
+    assert_response :success
+    assert_select "form.entry-form[action=?]", entry_path(entry)
+    assert_select "input[type=submit][value=?][data-turbo-submits-with=?]", "Save", "Saving..."
+    assert_select "input[type=submit][value=?]", "Preview", count: 0
+    assert_select "input[name='entry[entry_id]'][value=?]", entry.id.to_s
+  end
+
+  test "direct save creates a new entry and shows the save banner" do
+    assert_difference -> { Entry.count }, 1 do
+      post entries_path, params: {
+        entry: {
+          title: "Tea with Ada",
+          raw_date: "28 Sep 2026",
+          body_markdown: "Tea with [[Ada Lovelace]]."
+        }
+      }
+    end
+
     entry = Entry.order(:id).last
     assert_redirected_to entry_path(entry)
+    assert_nil session[:entry_draft]
 
     follow_redirect!
     assert_response :success
     assert_select "body.has-save-banner"
     assert_select ".flash.flash-notice.flash-save-success[data-controller=?]", "save-banner", text: "Entry saved."
     assert_select ".floating-nav-top a", text: "Home"
+  end
+
+  test "direct save updates an existing entry without creating another" do
+    entry = create_entry!(
+      title: "Existing",
+      occurred_on: Date.new(2020, 3, 15),
+      primary: @person,
+      body: "Note with [[Ada Lovelace]]."
+    )
+
+    assert_no_difference -> { Entry.count } do
+      patch entry_path(entry), params: {
+        entry: {
+          entry_id: entry.id,
+          title: "Updated title",
+          raw_date: "16 Mar 2020",
+          body_markdown: "Updated with [[Ada Lovelace]]."
+        }
+      }
+    end
+
+    assert_redirected_to entry_path(entry)
+    assert_nil session[:entry_draft]
+    entry.reload
+    assert_equal "Updated title", entry.title
+    assert_equal Date.new(2020, 3, 16), entry.occurred_on
+    assert_equal "Updated with [[Ada Lovelace]].", entry.body_markdown
+
+    follow_redirect!
+    assert_select ".flash.flash-notice", text: "Entry updated."
+  end
+
+  test "no-op direct save preserves exact markdown body" do
+    body = "Dinner with [[Ada Lovelace]].\n\n#church\n"
+    entry = create_entry!(
+      title: "Existing",
+      occurred_on: Date.new(2020, 3, 15),
+      primary: @person,
+      body: body
+    )
+
+    patch entry_path(entry), params: {
+      entry: {
+        entry_id: entry.id,
+        title: entry.title,
+        raw_date: entry.occurred_on.strftime("%d %b %Y"),
+        body_markdown: body
+      }
+    }
+
+    assert_redirected_to entry_path(entry)
+    assert_equal body, entry.reload.body_markdown
+  end
+
+  test "resolution save without body params persists a staged valid draft" do
+    post preview_entries_path, params: {
+      entry: {
+        title: "Staged tea",
+        raw_date: "28 Sep 2026",
+        body_markdown: "Tea with [[Ada Lovelace]]."
+      }
+    }
+    assert_redirected_to preview_entries_path
+    assert session[:entry_draft].present?
+
+    assert_difference -> { Entry.count }, 1 do
+      post entries_path
+    end
+
+    entry = Entry.order(:id).last
+    assert_redirected_to entry_path(entry)
+    assert_nil session[:entry_draft]
+    assert_equal "Staged tea", entry.title
+  end
+
+  test "unknown person on direct save stages draft and redirects to resolution UI" do
+    assert_no_difference -> { Entry.count } do
+      post entries_path, params: {
+        entry: {
+          title: "Mystery meeting",
+          raw_date: "28 Sep 2026",
+          body_markdown: "Met [[Unknown Person]]."
+        }
+      }
+    end
+
+    assert_redirected_to preview_entries_path
+    assert session[:entry_draft].present?
+    follow_redirect!
+    assert_select ".resolution-panel", text: /No person named "Unknown Person"/
+  end
+
+  test "ambiguous person on direct save stages draft without persisting" do
+    first = Person.create!(name: "Alex One")
+    first.update_columns(name: "Alex", slug: "alex-one")
+    second = Person.create!(name: "Alex Two")
+    second.update_columns(name: "Alex", slug: "alex-two")
+
+    assert_no_difference -> { Entry.count } do
+      post entries_path, params: {
+        entry: {
+          title: "Ambiguous",
+          raw_date: "28 Sep 2026",
+          body_markdown: "Hello [[Alex]]."
+        }
+      }
+    end
+
+    assert_redirected_to preview_entries_path
+    follow_redirect!
+    assert_select ".resolution-panel", text: /matches multiple people/
+  end
+
+  test "unknown person on edit save redirects to resolution without updating" do
+    entry = create_entry!(
+      title: "Existing",
+      occurred_on: Date.new(2020, 3, 15),
+      primary: @person,
+      body: "Note with [[Ada Lovelace]]."
+    )
+
+    assert_no_changes -> { entry.reload.body_markdown } do
+      patch entry_path(entry), params: {
+        entry: {
+          entry_id: entry.id,
+          title: "Existing",
+          raw_date: "15 Mar 2020",
+          body_markdown: "Met [[Brand New Person]]."
+        }
+      }
+    end
+
+    assert_redirected_to preview_entries_path
+    assert_equal entry.id, session[:entry_draft].with_indifferent_access[:entry_id]
+  end
+
+  test "validation failure without unresolved people re-renders new form" do
+    assert_no_difference -> { Entry.count } do
+      post entries_path, params: {
+        entry: {
+          title: "",
+          raw_date: "28 Sep 2026",
+          body_markdown: "Tea with [[Ada Lovelace]]."
+        }
+      }
+    end
+
+    assert_response :unprocessable_entity
+    assert_nil session[:entry_draft]
+    assert_select "form.entry-form"
+    assert_select "li", text: /Title cannot be blank/
+    assert_select "textarea[name='entry[body_markdown]']", text: "Tea with [[Ada Lovelace]]."
+  end
+
+  test "missing person validation re-renders edit form" do
+    entry = create_entry!(
+      title: "Existing",
+      occurred_on: Date.new(2020, 3, 15),
+      primary: @person,
+      body: "Note with [[Ada Lovelace]]."
+    )
+
+    patch entry_path(entry), params: {
+      entry: {
+        entry_id: entry.id,
+        title: "Existing",
+        raw_date: "15 Mar 2020",
+        body_markdown: "No person links here."
+      }
+    }
+
+    assert_response :unprocessable_entity
+    assert_select "li", text: /at least one person link/
+    assert_select "textarea[name='entry[body_markdown]']", text: "No person links here."
+  end
+
+  test "invalid date without unresolved people re-renders form" do
+    assert_no_difference -> { Entry.count } do
+      post entries_path, params: {
+        entry: {
+          title: "Bad date",
+          raw_date: "not-a-date",
+          body_markdown: "Tea with [[Ada Lovelace]]."
+        }
+      }
+    end
+
+    assert_response :unprocessable_entity
+    assert_select "input[name='entry[raw_date]'][value=?]", "not-a-date"
+  end
+
+  test "unknown person with invalid date prefers resolution UI and preserves errors" do
+    assert_no_difference -> { Entry.count } do
+      post entries_path, params: {
+        entry: {
+          title: "Both problems",
+          raw_date: "not-a-date",
+          body_markdown: "Met [[Unknown Person]]."
+        }
+      }
+    end
+
+    assert_redirected_to preview_entries_path
+    draft = session[:entry_draft].with_indifferent_access
+    assert_includes draft[:body_markdown], "[[Unknown Person]]"
+    assert_equal "not-a-date", draft[:raw_date]
+    assert draft[:validation_errors].any?
+
+    follow_redirect!
+    assert_select ".resolution-panel"
+    assert_select ".preview-status-list li", text: /not-a-date|recognized date format/i
+  end
+
+  test "direct save adds and removes person associations without preview" do
+    sarah = Person.create!(name: "Sarah", slug: "sarah")
+    entry = create_entry!(
+      title: "Dinner",
+      occurred_on: Date.new(2020, 3, 15),
+      primary: @person,
+      people: [ @person ],
+      body: "Dinner with [[Ada Lovelace]]."
+    )
+
+    patch entry_path(entry), params: {
+      entry: {
+        entry_id: entry.id,
+        title: "Dinner",
+        raw_date: "15 Mar 2020",
+        body_markdown: "Dinner with [[Ada Lovelace]] and [[Sarah]]."
+      }
+    }
+    assert_redirected_to entry_path(entry)
+    entry.reload
+    assert_equal [ @person.id, sarah.id ], entry.entry_people.order(:position).pluck(:person_id)
+
+    patch entry_path(entry), params: {
+      entry: {
+        entry_id: entry.id,
+        title: "Dinner",
+        raw_date: "15 Mar 2020",
+        body_markdown: "Dinner with [[Sarah]]."
+      }
+    }
+    assert_redirected_to entry_path(entry)
+    entry.reload
+    assert_equal [ sarah.id ], entry.entry_people.order(:position).pluck(:person_id)
+    assert_equal sarah.id, entry.primary_person_id
+    assert Person.exists?(@person.id)
+  end
+
+  test "create person on resolution then save persists and clears draft" do
+    post entries_path, params: {
+      entry: {
+        title: "New friend",
+        raw_date: "28 Sep 2026",
+        body_markdown: "Met [[New Friend]]."
+      }
+    }
+    assert_redirected_to preview_entries_path
+
+    post create_person_entries_path, params: { name: "New Friend" }
+    assert_redirected_to preview_entries_path
+    assert Person.exists?(name: "New Friend")
+
+    assert_difference -> { Entry.count }, 1 do
+      post entries_path
+    end
+
+    entry = Entry.order(:id).last
+    assert_redirected_to entry_path(entry)
+    assert_nil session[:entry_draft]
+    assert_equal "New Friend", entry.primary_person.name
   end
 
   test "other notices do not shift Home for the save banner" do
@@ -157,31 +453,5 @@ class EntriesControllerTest < ActionDispatch::IntegrationTest
   test "application.js does not eagerly import overtype" do
     source = Rails.root.join("app/javascript/application.js").read
     refute_match(/\bovertype\b/, source)
-  end
-
-  test "preview preserves wiki links hashtags and trailing newlines for no-op body" do
-    body = "Dinner with [[Ada Lovelace]].\n\n#church\n"
-    entry = create_entry!(
-      title: "Existing",
-      occurred_on: Date.new(2020, 3, 15),
-      primary: @person,
-      body: body
-    )
-
-    post preview_entry_path(entry), params: {
-      entry: {
-        entry_id: entry.id,
-        title: entry.title,
-        raw_date: entry.occurred_on.strftime("%d %b %Y"),
-        body_markdown: body
-      }
-    }
-    assert_redirected_to preview_entries_path
-    follow_redirect!
-
-    draft = session[:entry_draft]
-    assert_equal body, draft["body_markdown"]
-    assert_includes draft["parsed_people"], "Ada Lovelace"
-    assert_includes draft["parsed_tags"], "church"
   end
 end
