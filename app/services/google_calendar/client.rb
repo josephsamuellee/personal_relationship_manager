@@ -45,7 +45,25 @@ module GoogleCalendar
         page_token = response.next_page_token
         break if page_token.blank?
       end
+      # #region agent log
+      DebugLog.log("B", "client.rb:list_events", "list_events ok", {
+        calendarId: calendar_id.to_s[0, 64],
+        itemCount: items.size,
+        timeMin: time_min.iso8601,
+        timeMax: time_max.iso8601
+      })
+      # #endregion
       items
+    rescue StandardError => e
+      # #region agent log
+      DebugLog.log("B", "client.rb:list_events", "list_events failed", {
+        calendarId: calendar_id.to_s[0, 64],
+        errorClass: e.class.name,
+        errorMessage: e.message.to_s[0, 400],
+        backtrace0: e.backtrace&.first
+      })
+      # #endregion
+      raise
     end
 
     private
