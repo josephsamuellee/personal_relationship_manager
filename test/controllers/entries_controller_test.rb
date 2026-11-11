@@ -508,4 +508,66 @@ class EntriesControllerTest < ActionDispatch::IntegrationTest
     source = Rails.root.join("app/javascript/application.js").read
     refute_match(/\bovertype\b/, source)
   end
+
+  test "entry form CSS doubles editor height without changing shared about default" do
+    css = Rails.root.join("app/assets/stylesheets/application.css").read
+    assert_match(/\.entry-form \.markdown-editor-mount[\s\S]*min-height:\s*24rem/, css)
+    assert_match(/\.markdown-editor-mount \{[\s\S]*min-height:\s*12rem/, css)
+  end
+
+  test "new and edit show recent people buttons below Save ranked by latest association" do
+    older = Person.create!(name: "Older Friend", slug: "older-friend")
+    newer = Person.create!(name: "Newer Friend", slug: "newer-friend")
+    Person.create!(name: "Unlinked", slug: "unlinked")
+    create_entry!(title: "Old", occurred_on: Date.new(2020, 1, 1), primary: older)
+    create_entry!(title: "New", occurred_on: Date.new(2024, 1, 1), primary: newer)
+
+    get new_entry_path
+    assert_response :success
+    assert_select "form.entry-form[data-controller=?]", "recent-people"
+    assert_select ".recent-people" do
+      assert_select "button.recent-people-button[type=button]", count: 2
+      assert_select "button.recent-people-button", text: "Newer Friend"
+      assert_select "button.recent-people-button", text: "Older Friend"
+      assert_select "button.recent-people-button", text: "Ada Lovelace", count: 0
+      assert_select "button.recent-people-button", text: "Unlinked", count: 0
+      assert_select "a", count: 0
+    end
+    assert_select "form.entry-form input[type=submit][value=Save] ~ .recent-people"
+
+    entry = create_entry!(
+      title: "Existing",
+      occurred_on: Date.new(2021, 1, 1),
+      primary: @person,
+      body: "Note with [[Ada Lovelace]]."
+    )
+    get edit_entry_path(entry)
+    assert_response :success
+    assert_select "form.entry-form input[type=submit][value=Save] ~ .recent-people"
+    assert_select ".recent-people button.recent-people-button[type=button]", minimum: 1
+  end
+
+  test "recent people section is omitted when nobody has been referenced" do
+    # setup creates Ada but no saved Entry associations
+    get new_entry_path
+    assert_response :success
+    assert_select ".recent-people", count: 0
+    assert_select ".recent-people-button", count: 0
+  end
+
+  test "save persists body that includes a recent-people style wiki insert" do
+    assert_difference -> { Entry.count }, 1 do
+      post entries_path, params: {
+        entry: {
+          title: "Inserted ref",
+          raw_date: "28 Sep 2026",
+          body_markdown: "Met [[Ada Lovelace]]."
+        }
+      }
+    end
+
+    entry = Entry.order(:id).last
+    assert_equal "Met [[Ada Lovelace]].", entry.body_markdown
+    assert_redirected_to entry_path(entry)
+  end
 end

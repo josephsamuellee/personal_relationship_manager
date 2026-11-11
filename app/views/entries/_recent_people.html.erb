@@ -1,0 +1,16 @@
+<%# locals: people - Array of Person %>
+<% return if people.blank? %>
+
+<section class="recent-people" aria-label="Recent People">
+  <h2 class="recent-people-heading">Recent People</h2>
+  <div class="recent-people-grid">
+    <% people.each do |person| %>
+      <button type="button"
+              class="recent-people-button"
+              data-action="pointerdown->recent-people#preserveSelection click->recent-people#insert"
+              data-recent-people-name-param="<%= person.name %>">
+        <%= person.name %>
+      </button>
+    <% end %>
+  </div>
+</section>
