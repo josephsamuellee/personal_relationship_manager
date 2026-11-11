@@ -6,14 +6,6 @@ class UpcomingCalendarEventsController < ApplicationController
       message: result.message,
       events_by_date: serialize_events(result.events_by_date)
     }
-    # #region agent log
-    GoogleCalendar::DebugLog.log("E", "upcoming_calendar_events_controller.rb:show", "events endpoint response", {
-      status: result.status.to_s,
-      message: result.message.to_s[0, 200],
-      dayKeys: payload[:events_by_date].keys.size,
-      eventTotal: payload[:events_by_date].values.sum(&:size)
-    })
-    # #endregion
     render json: payload
   end
 

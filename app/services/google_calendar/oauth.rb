@@ -19,37 +19,15 @@ module GoogleCalendar
     end
 
     def self.status
-      unless client_configured?
-        # #region agent log
-        DebugLog.log("A", "oauth.rb:status", "oauth status branch", { status: "not_configured", clientIdPresent: ENV["GOOGLE_OAUTH_CLIENT_ID"].present?, clientSecretPresent: ENV["GOOGLE_OAUTH_CLIENT_SECRET"].present? })
-        # #endregion
-        return :not_configured
-      end
-
-      token_present = TokenStore.default.present?
-      unless token_present
-        # #region agent log
-        DebugLog.log("C", "oauth.rb:status", "oauth status branch", { status: "disconnected", tokenPresent: false, tokenPath: TokenStore.default_path })
-        # #endregion
-        return :disconnected
-      end
+      return :not_configured unless client_configured?
+      return :disconnected unless TokenStore.default.present?
 
       credentials = new.credentials
-      status = credentials ? :connected : :reconnect_required
-      # #region agent log
-      DebugLog.log("A", "oauth.rb:status", "oauth status after credentials", { status: status.to_s, tokenPresent: true, credentialsPresent: !credentials.nil? })
-      # #endregion
-      status
-    rescue ReauthorizationRequired, Signet::AuthorizationError => e
-      # #region agent log
-      DebugLog.log("A", "oauth.rb:status", "oauth status reconnect_required", { status: "reconnect_required", errorClass: e.class.name, errorMessage: e.message.to_s[0, 200] })
-      # #endregion
+      return :reconnect_required unless credentials
+
+      :connected
+    rescue ReauthorizationRequired, Signet::AuthorizationError
       :reconnect_required
-    rescue StandardError => e
-      # #region agent log
-      DebugLog.log("A", "oauth.rb:status", "oauth status unexpected error", { errorClass: e.class.name, errorMessage: e.message.to_s[0, 300], backtrace0: e.backtrace&.first })
-      # #endregion
-      raise
     end
 
     def initialize(token_store: TokenStore.default)
@@ -76,27 +54,12 @@ module GoogleCalendar
       creds = authorizer_without_request.get_credentials(USER_ID)
       raise ReauthorizationRequired, "Google Calendar authorization missing" if creds.nil?
 
-      needs_refresh = creds.respond_to?(:expires_within?) && creds.expires_within?(60)
-      # #region agent log
-      DebugLog.log("A", "oauth.rb:credentials", "credentials loaded", { needsRefresh: needs_refresh, hasRefreshToken: creds.refresh_token.present?, expiresAt: (creds.expires_at rescue nil).to_s })
-      # #endregion
-      if needs_refresh
+      if creds.respond_to?(:expires_within?) && creds.expires_within?(60)
         creds.fetch_access_token!
-        # #region agent log
-        DebugLog.log("A", "oauth.rb:credentials", "access token refresh succeeded", {})
-        # #endregion
       end
       creds
     rescue Signet::AuthorizationError, Google::Auth::AuthorizationError => e
-      # #region agent log
-      DebugLog.log("A", "oauth.rb:credentials", "credentials auth error", { errorClass: e.class.name, errorMessage: e.message.to_s[0, 300] })
-      # #endregion
       raise ReauthorizationRequired, e.message
-    rescue StandardError => e
-      # #region agent log
-      DebugLog.log("A", "oauth.rb:credentials", "credentials unexpected error", { errorClass: e.class.name, errorMessage: e.message.to_s[0, 300], backtrace0: e.backtrace&.first })
-      # #endregion
-      raise
     end
 
     def redirect_uri_for(request)

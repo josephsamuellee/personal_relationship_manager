@@ -9,16 +9,7 @@ module GoogleCalendar
     end
 
     def call
-      oauth_status = Oauth.status
-      # #region agent log
-      DebugLog.log("D", "events_query.rb:call", "EventsQuery start", {
-        oauthStatus: oauth_status.to_s,
-        rangeStart: @range.start_date.iso8601,
-        rangeEnd: @range.end_date.iso8601
-      })
-      # #endregion
-
-      case oauth_status
+      case Oauth.status
       when :not_configured
         return Result.new(status: :unavailable, events_by_date: {}, message: "Google Calendar is not configured.")
       when :disconnected
@@ -29,9 +20,6 @@ module GoogleCalendar
 
       allowlist = Setting.google_calendar_allowlist
       if allowlist.empty?
-        # #region agent log
-        DebugLog.log("D", "events_query.rb:call", "empty allowlist", { allowlistCount: 0 })
-        # #endregion
         return Result.new(
           status: :empty_allowlist,
           events_by_date: empty_days,
@@ -39,29 +27,12 @@ module GoogleCalendar
         )
       end
 
-      # #region agent log
-      DebugLog.log("B", "events_query.rb:call", "fetching allowlisted calendars", { allowlistCount: allowlist.size, allowlist: allowlist.map { |id| id.to_s[0, 64] } })
-      # #endregion
       events = fetch_normalized(allowlist)
       grouped = EventAggregator.group_by_date(events, range: @range)
-      # #region agent log
-      DebugLog.log("B", "events_query.rb:call", "fetch ok", { eventCount: events.size, dayCount: grouped.keys.size })
-      # #endregion
       Result.new(status: :ok, events_by_date: empty_days.merge(grouped), message: nil)
-    rescue Oauth::ReauthorizationRequired => e
-      # #region agent log
-      DebugLog.log("A", "events_query.rb:call", "reauthorization required during query", { errorClass: e.class.name, errorMessage: e.message.to_s[0, 300] })
-      # #endregion
+    rescue Oauth::ReauthorizationRequired
       Result.new(status: :reconnect_required, events_by_date: {}, message: "Reconnect Google Calendar in Config.")
     rescue StandardError => e
-      # #region agent log
-      DebugLog.log("A-B", "events_query.rb:call", "events fetch failed -> temporarily unavailable", {
-        errorClass: e.class.name,
-        errorMessage: e.message.to_s[0, 400],
-        backtrace0: e.backtrace&.first,
-        backtrace1: e.backtrace&.[](1)
-      })
-      # #endregion
       Rails.logger.warn("[GoogleCalendar] events fetch failed: #{e.class}")
       Result.new(status: :error, events_by_date: {}, message: "Google Calendar is temporarily unavailable.")
     end
