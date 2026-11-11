@@ -43,6 +43,8 @@ class PeopleControllerTest < ActionDispatch::IntegrationTest
     assert_select "textarea[name='person[about_markdown]']", text: "Likes hiking.\n"
     assert_select "button[data-action=?]", "about-editor#togglePreview", text: "Preview"
     assert_select "input[type=submit][value=?]", "Save About"
+    assert_select ".recent-people", count: 0
+    assert_select ".recent-people-button", count: 0
   end
 
   test "person about markdown editor theme value follows light and dark settings" do

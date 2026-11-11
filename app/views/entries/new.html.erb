@@ -10,7 +10,13 @@
   </div>
 <% end %>
 
-<%= form_with url: entries_path, method: :post, class: "entry-form" do |form| %>
+<%= form_with url: entries_path,
+              method: :post,
+              class: "entry-form",
+              data: {
+                controller: "recent-people",
+                recent_people_markdown_editor_outlet: ".markdown-editor-field"
+              } do |form| %>
   <div class="field">
     <%= label_tag :entry_title, "Title" %>
     <%= text_field_tag "entry[title]",
@@ -31,4 +37,6 @@
              hint: "Use [[Person Name]] for people and #tag for tags." %>
 
   <%= submit_tag "Save", data: { turbo_submits_with: "Saving..." } %>
+
+  <%= render "entries/recent_people", people: @recent_people %>
 <% end %>

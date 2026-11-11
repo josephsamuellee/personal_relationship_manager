@@ -1043,3 +1043,45 @@ body.has-save-banner .floating-nav-top {
   width: 100%;
   min-height: 12rem;
 }
+
+/* Entry body editor only: roughly double the shared default height */
+.entry-form .markdown-editor-mount,
+.entry-form .markdown-editor-field .overtype-container,
+.entry-form .markdown-editor-mount > textarea {
+  min-height: 24rem;
+}
+
+.recent-people {
+  margin-top: 1rem;
+}
+
+.recent-people-heading {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.recent-people-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.recent-people-button {
+  min-height: 2.75rem;
+  padding: 0.5rem 0.6rem;
+  text-align: center;
+  line-height: 1.25;
+  word-break: break-word;
+}
+
+@media (max-width: 640px) {
+  .recent-people-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.6rem;
+  }
+
+  .recent-people-button {
+    min-height: 3rem;
+  }
+}

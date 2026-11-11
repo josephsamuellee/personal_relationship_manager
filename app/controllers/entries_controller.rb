@@ -1,5 +1,6 @@
 class EntriesController < ApplicationController
   before_action :set_entry, only: [ :show, :edit, :update, :create_preview_update ]
+  before_action :load_recent_people, only: [ :new, :edit ]
 
   def new
     @draft = if session[:entry_draft]
@@ -173,11 +174,16 @@ class EntriesController < ApplicationController
   end
 
   def render_save_failure(action)
+    load_recent_people
     if action == :create
       render :new, status: :unprocessable_entity
     else
       render :edit, status: :unprocessable_entity
     end
+  end
+
+  def load_recent_people
+    @recent_people = RecentPeopleQuery.call
   end
 
   def load_draft_from_session
