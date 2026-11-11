@@ -5,7 +5,7 @@ class EntriesController < ApplicationController
     @draft = if session[:entry_draft]
       EntryDraft.from_session(session[:entry_draft])
     else
-      EntryDraft.new(raw_date: initial_raw_date)
+      EntryDraft.new(raw_date: initial_raw_date, body_markdown: initial_body_markdown)
     end
     @autofocus_title = params[:occurred_on].present?
   end
@@ -199,6 +199,14 @@ class EntriesController < ApplicationController
     date.strftime("%d %b %Y")
   rescue ArgumentError
     Time.zone.today.strftime("%d %b %Y")
+  end
+
+  # Optional Markdown body seed from Upcoming Calendar event titles (`body` query param).
+  # Session drafts take precedence in #new and are not overwritten here.
+  def initial_body_markdown
+    return if params[:body].nil?
+
+    params[:body].to_s
   end
 
   def preview_notice_for(draft)

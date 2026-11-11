@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_08_21_031403) do
+ActiveRecord::Schema[7.2].define(version: 2026_11_07_213720) do
   create_table "entries", force: :cascade do |t|
     t.string "title", null: false
     t.date "occurred_on", null: false
@@ -59,6 +59,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_21_031403) do
     t.integer "favorite_person_1_id"
     t.integer "favorite_person_2_id"
     t.integer "favorite_person_3_id"
+    t.text "google_calendar_allowlist"
     t.index ["favorite_person_1_id"], name: "index_settings_on_favorite_person_1_id"
     t.index ["favorite_person_2_id"], name: "index_settings_on_favorite_person_2_id"
     t.index ["favorite_person_3_id"], name: "index_settings_on_favorite_person_3_id"

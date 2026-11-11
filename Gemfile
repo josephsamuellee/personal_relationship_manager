@@ -35,6 +35,10 @@ gem "bootsnap", require: false
 gem "redcarpet"
 gem "sanitize"
 
+# Read-only Google Calendar integration (Upcoming Calendar)
+gem "googleauth", "~> 1.11"
+gem "google-apis-calendar_v3", "~> 0.44"
+
 group :development, :test do
   gem "minitest", "~> 5.25"
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem

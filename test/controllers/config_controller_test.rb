@@ -116,4 +116,55 @@ class ConfigControllerTest < ActionDispatch::IntegrationTest
       assert_match(/Unavailable/, response.body)
     end
   end
+
+  test "google calendar section shows setup steps when credentials are missing" do
+    ENV.delete("GOOGLE_OAUTH_CLIENT_ID")
+    ENV.delete("GOOGLE_OAUTH_CLIENT_SECRET")
+
+    get config_path
+
+    assert_response :success
+    assert_select "h2", text: "Google Calendar"
+    assert_match(/Not configured/, response.body)
+    assert_select ".google-calendar-setup-steps"
+    assert_match(/GOOGLE_OAUTH_CLIENT_ID/, response.body)
+    assert_match(/GOOGLE_OAUTH_CLIENT_SECRET/, response.body)
+    assert_match(%r{/google_calendar/oauth/callback}, response.body)
+    assert_select "a[href=?]", "https://console.cloud.google.com/apis/credentials"
+  end
+
+  test "google calendar section shows disconnected without tokens" do
+    ENV["GOOGLE_OAUTH_CLIENT_ID"] = "id"
+    ENV["GOOGLE_OAUTH_CLIENT_SECRET"] = "secret"
+    ENV["GOOGLE_CALENDAR_TOKEN_PATH"] = Rails.root.join("tmp", "missing_tokens.json.enc").to_s
+
+    get config_path
+
+    assert_response :success
+    assert_select "h2", text: "Google Calendar"
+    assert_match(/Disconnected/, response.body)
+    assert_select "a", text: "Connect Google Calendar"
+    assert_select "details.google-calendar-setup-details"
+  ensure
+    ENV.delete("GOOGLE_OAUTH_CLIENT_ID")
+    ENV.delete("GOOGLE_OAUTH_CLIENT_SECRET")
+    ENV.delete("GOOGLE_CALENDAR_TOKEN_PATH")
+  end
+
+  test "saves and clears google calendar allowlist" do
+    Setting.update_google_calendar_allowlist([ "cal-a" ])
+
+    patch config_path, params: {
+      google_calendar_allowlist_form: "1",
+      google_calendar_ids: [ "cal-a", "cal-c" ]
+    }
+
+    assert_redirected_to config_path
+    assert_equal [ "cal-a", "cal-c" ], Setting.google_calendar_allowlist
+
+    patch config_path, params: { google_calendar_allowlist_form: "1" }
+
+    assert_redirected_to config_path
+    assert_equal [], Setting.google_calendar_allowlist
+  end
 end

@@ -1,0 +1,37 @@
+<section class="homepage-section upcoming-calendar"
+         data-controller="upcoming-calendar"
+         data-upcoming-calendar-url-value="<%= upcoming_calendar_events_path %>"
+         data-upcoming-calendar-config-url-value="<%= config_path %>">
+  <h2>Upcoming Calendar</h2>
+
+  <div class="upcoming-calendar-status" data-upcoming-calendar-target="status" hidden></div>
+  <p class="upcoming-calendar-loading" data-upcoming-calendar-target="loading">Loading events…</p>
+
+  <div class="upcoming-calendar-grid" data-upcoming-calendar-target="grid">
+    <div class="upcoming-calendar-weekdays" aria-hidden="true">
+      <span class="upcoming-calendar-week-spacer"></span>
+      <% @upcoming_calendar.weekday_headers.each do |label| %>
+        <span class="upcoming-calendar-weekday"><%= label %></span>
+      <% end %>
+    </div>
+
+    <% @upcoming_calendar.weeks.each do |week| %>
+      <div class="upcoming-calendar-week" data-week-label="<%= week.label %>">
+        <div class="upcoming-calendar-week-label"><%= week.label %></div>
+        <% week.dates.each do |date| %>
+          <% cell_classes = [ "upcoming-calendar-day" ] %>
+          <% cell_classes << "is-today" if @upcoming_calendar.today?(date) %>
+          <div class="<%= cell_classes.join(" ") %>"
+               data-date="<%= date.iso8601 %>"
+               data-upcoming-calendar-target="day">
+            <%= link_to @upcoming_calendar.day_label(date),
+                        new_entry_path(occurred_on: date.iso8601),
+                        class: "upcoming-calendar-day-number",
+                        data: { turbo_frame: "_top" } %>
+            <div class="upcoming-calendar-events" data-upcoming-calendar-target="events"></div>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</section>

@@ -32,14 +32,7 @@
     </p>
   </section>
 
-  <section class="homepage-section">
-    <h2>Upcoming Calendar</h2>
-    <% if @calendar.available? %>
-      <iframe src="<%= @calendar.embed_url %>" class="calendar-embed" title="Google Calendar" loading="lazy"></iframe>
-    <% else %>
-      <p class="calendar-unavailable">Calendar unavailable</p>
-    <% end %>
-  </section>
+  <%= render "homepage/upcoming_calendar" %>
 
   <section class="homepage-section split-view">
     <div class="split-panel">

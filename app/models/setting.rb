@@ -10,6 +10,32 @@ class Setting < ApplicationRecord
 
   validates :theme, inclusion: { in: THEMES }
 
+  def self.google_calendar_allowlist
+    record = first
+    return [] unless record
+
+    parse_allowlist(record.google_calendar_allowlist)
+  end
+
+  def self.update_google_calendar_allowlist(ids)
+    normalized = Array(ids).map { |id| id.to_s.strip }.reject(&:blank?).uniq
+    record = first_or_initialize
+    record.theme = DEFAULT_THEME if record.theme.blank?
+    record.google_calendar_allowlist = JSON.generate(normalized)
+    record.save!
+    normalized
+  end
+
+  def self.parse_allowlist(raw)
+    return [] if raw.blank?
+
+    parsed = JSON.parse(raw)
+    Array(parsed).map { |id| id.to_s.strip }.reject(&:blank?).uniq
+  rescue JSON::ParserError
+    []
+  end
+  private_class_method :parse_allowlist
+
   def self.current_theme
     value = first&.theme
     THEMES.include?(value) ? value : DEFAULT_THEME

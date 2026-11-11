@@ -383,6 +383,60 @@ class EntriesControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "new entry seeds markdown body from body query param" do
+    get new_entry_path(occurred_on: "2026-11-12", body: "Dinner with Jerry")
+
+    assert_response :success
+    assert_select "input[name='entry[raw_date]'][value=?]", "12 Nov 2026"
+    assert_select "textarea[name='entry[body_markdown]']", text: "Dinner with Jerry"
+  end
+
+  test "new entry preserves special characters in body seed" do
+    title = 'Café & <friends> say "hi" **bold**'
+    get new_entry_path(occurred_on: "2026-11-13", body: title)
+
+    assert_response :success
+    textarea = css_select("textarea[name='entry[body_markdown]']").first
+    assert_equal title, textarea.text
+    refute_includes response.body, "<script>"
+  end
+
+  test "new entry body seed does not persist an entry by itself" do
+    assert_no_difference("Entry.count") do
+      get new_entry_path(occurred_on: "2026-11-12", body: "Family Vacation")
+      assert_response :success
+    end
+  end
+
+  test "session draft takes precedence over body seed" do
+    post preview_entries_path, params: {
+      entry: {
+        title: "Draft title",
+        raw_date: "10 Sep 2026",
+        body_markdown: "Existing draft body"
+      }
+    }
+
+    get new_entry_path(occurred_on: "2026-11-12", body: "Dinner with Jerry")
+
+    assert_response :success
+    assert_select "textarea[name='entry[body_markdown]']", text: "Existing draft body"
+  end
+
+  test "validation failure keeps seeded date and body available" do
+    post entries_path, params: {
+      entry: {
+        title: "",
+        raw_date: "12 Nov 2026",
+        body_markdown: "Dinner with Jerry"
+      }
+    }
+
+    assert_response :unprocessable_entity
+    assert_select "input[name='entry[raw_date]'][value=?]", "12 Nov 2026"
+    assert_select "textarea[name='entry[body_markdown]']", text: "Dinner with Jerry"
+  end
+
   test "new entry exposes compact occurred on controls and app-zone today" do
     travel_to Time.zone.local(2026, 10, 13, 12, 0, 0) do
       get new_entry_path

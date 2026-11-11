@@ -28,4 +28,10 @@ Rails.application.routes.draw do
 
   get "/config", to: "config#show", as: :config
   patch "/config", to: "config#update"
+
+  get "/homepage/upcoming_calendar_events", to: "upcoming_calendar_events#show", as: :upcoming_calendar_events
+
+  get "/google_calendar/oauth/connect", to: "google_calendar_oauth#connect", as: :google_calendar_oauth_connect
+  get "/google_calendar/oauth/callback", to: "google_calendar_oauth#callback", as: :google_calendar_oauth_callback
+  delete "/google_calendar/oauth/disconnect", to: "google_calendar_oauth#disconnect", as: :google_calendar_oauth_disconnect
 end

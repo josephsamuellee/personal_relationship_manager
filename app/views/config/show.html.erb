@@ -17,6 +17,67 @@
   </section>
 
   <section class="config-section">
+    <h2>Google Calendar</h2>
+    <% case @google_status %>
+    <% when :not_configured %>
+      <p><strong>Status:</strong> Not configured</p>
+      <p>
+        Client ID and secret are missing from the environment.
+        Follow the steps below, then reload this page to connect.
+      </p>
+      <%= render "config/google_calendar_setup" %>
+    <% when :disconnected %>
+      <p><strong>Status:</strong> Disconnected</p>
+      <p>
+        OAuth client credentials are present. Connect your Google account next,
+        then choose which calendars appear on Upcoming Calendar.
+      </p>
+      <p><%= link_to "Connect Google Calendar", google_calendar_oauth_connect_path, class: "button-primary" %></p>
+      <details class="google-calendar-setup-details">
+        <summary>Show setup reference (redirect URI and env vars)</summary>
+        <%= render "config/google_calendar_setup" %>
+      </details>
+    <% when :reconnect_required %>
+      <p><strong>Status:</strong> Reconnect required</p>
+      <p>Stored Google authorization can no longer be used. Reconnect, or disconnect and start over.</p>
+      <p><%= link_to "Reconnect Google Calendar", google_calendar_oauth_connect_path, class: "button-primary" %></p>
+      <p>
+        <%= button_to "Disconnect", google_calendar_oauth_disconnect_path, method: :delete, class: "button-secondary" %>
+      </p>
+      <details class="google-calendar-setup-details">
+        <summary>Show setup reference (redirect URI and env vars)</summary>
+        <%= render "config/google_calendar_setup" %>
+      </details>
+    <% when :connected %>
+      <p><strong>Status:</strong> Connected</p>
+      <p>
+        <%= button_to "Disconnect", google_calendar_oauth_disconnect_path, method: :delete, class: "button-secondary" %>
+      </p>
+      <%= form_with url: config_path, method: :patch, class: "google-calendar-allowlist-form" do %>
+        <%= hidden_field_tag :google_calendar_allowlist_form, "1" %>
+        <fieldset>
+          <legend>Calendars for Upcoming Calendar</legend>
+          <% if @google_calendars.empty? %>
+            <p class="placeholder">No calendars were returned from Google.</p>
+          <% else %>
+            <ul class="calendar-allowlist">
+              <% @google_calendars.each do |calendar| %>
+                <li>
+                  <label>
+                    <%= check_box_tag "google_calendar_ids[]", calendar.id, @google_allowlist.include?(calendar.id), id: "google_calendar_#{calendar.id}" %>
+                    <%= calendar.summary %><%= " (primary)" if calendar.primary %>
+                  </label>
+                </li>
+              <% end %>
+            </ul>
+          <% end %>
+        </fieldset>
+        <%= submit_tag "Save calendar selection", class: "button-primary" %>
+      <% end %>
+    <% end %>
+  </section>
+
+  <section class="config-section">
     <h2>Favorite People</h2>
     <p class="placeholder"><em>Favorite People homepage slots (positions 1, 2, and 3) are set on each Person page using the Favorite People dropdown, then saved with that page. They cannot be edited here.</em></p>
   </section>
