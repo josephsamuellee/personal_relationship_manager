@@ -90,11 +90,11 @@ module GoogleCalendar
         "status" => item.status,
         "summary" => item.summary,
         "start" => {
-          "date" => item.start&.date,
+          "date" => item.start&.date&.to_s,
           "dateTime" => item.start&.date_time&.iso8601
         },
         "end" => {
-          "date" => item.end&.date,
+          "date" => item.end&.date&.to_s,
           "dateTime" => item.end&.date_time&.iso8601
         }
       }

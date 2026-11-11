@@ -44,4 +44,18 @@ class GoogleCalendar::EventNormalizerTest < ActiveSupport::TestCase
     assert event.all_day?
     assert_equal [ Date.new(2026, 11, 12) ], event.local_dates
   end
+
+  test "normalizes all-day dates when Google API returns Date objects" do
+    item = {
+      "id" => "a2",
+      "summary" => "Holiday",
+      "start" => { "date" => Date.new(2026, 11, 12) },
+      "end" => { "date" => Date.new(2026, 11, 13) }
+    }
+
+    event = GoogleCalendar::EventNormalizer.from_api(item, calendar_id: "cal-a")
+
+    assert event.all_day?
+    assert_equal [ Date.new(2026, 11, 12) ], event.local_dates
+  end
 end

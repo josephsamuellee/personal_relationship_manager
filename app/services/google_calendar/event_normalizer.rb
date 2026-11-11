@@ -57,19 +57,37 @@ module GoogleCalendar
 
     def starts_at
       if all_day?
-        Date.iso8601(start_node["date"])
+        coerce_date(start_node["date"])
       else
-        Time.zone.parse(start_node["dateTime"])
+        coerce_time(start_node["dateTime"])
       end
     end
 
     def ends_at
       if all_day?
         raw = end_node["date"]
-        raw.present? ? Date.iso8601(raw) : starts_at + 1
+        raw.present? ? coerce_date(raw) : starts_at + 1
       else
         raw = end_node["dateTime"]
-        raw.present? ? Time.zone.parse(raw) : starts_at
+        raw.present? ? coerce_time(raw) : starts_at
+      end
+    end
+
+    # Google API client may yield Date/Time objects; stubbed hashes use strings.
+    def coerce_date(value)
+      case value
+      when Date then value
+      when Time, ActiveSupport::TimeWithZone then value.in_time_zone(Time.zone).to_date
+      else Date.iso8601(value.to_s)
+      end
+    end
+
+    def coerce_time(value)
+      case value
+      when ActiveSupport::TimeWithZone then value
+      when Time then value.in_time_zone(Time.zone)
+      when Date then Time.zone.local(value.year, value.month, value.day)
+      else Time.zone.parse(value.to_s)
       end
     end
 
