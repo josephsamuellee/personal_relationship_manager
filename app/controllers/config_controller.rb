@@ -7,6 +7,7 @@ class ConfigController < ApplicationController
     @google_calendars = load_google_calendars
     @google_oauth_redirect_uri = "#{request.base_url}/google_calendar/oauth/callback"
     @google_oauth_host_ok_for_redirect = request.ssl? || request.local?
+    @unfinished_drafts = PersistentEntryDraft.most_recent_first.to_a
   end
 
   def update

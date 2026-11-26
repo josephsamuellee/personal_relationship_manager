@@ -33,6 +33,21 @@ class EntryDraft
     draft
   end
 
+  def self.from_record(record)
+    draft = new(
+      title: record.title,
+      raw_date: record.raw_date,
+      body_markdown: record.body_markdown,
+      entry_id: record.entry_id,
+      person_selections: record.person_selections_hash
+    )
+    draft.persistent_draft_id = record.id
+    draft.parse!
+    draft
+  end
+
+  attr_accessor :persistent_draft_id
+
   def to_session
     {
       title: title,
@@ -46,6 +61,12 @@ class EntryDraft
       person_selections: person_selections,
       validation_errors: validation_errors
     }
+  end
+
+  def persist!
+    record = PersistentEntryDraft.upsert_from_entry_draft!(self, draft_id: persistent_draft_id)
+    self.persistent_draft_id = record.id
+    record
   end
 
   def parse!

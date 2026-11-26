@@ -14,8 +14,8 @@
 </div>
 
 <div class="floating-actions" aria-label="Entry actions">
-  <% if entry_draft_in_session? %>
-    <%= link_to "Drafts", drafts_entries_path, class: "floating-button" %>
+  <% if (mru_draft = most_recent_entry_draft) %>
+    <%= link_to "Drafts", edit_entry_draft_path(mru_draft), class: "floating-button" %>
   <% end %>
   <%= link_to "Add Entry", new_entry_path, class: "floating-button" %>
 </div>

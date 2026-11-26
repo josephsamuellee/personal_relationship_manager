@@ -25,22 +25,22 @@
         <ul class="resolution-options">
           <% item[:suggestions].each do |person| %>
             <li>
-              <%= button_to "Change all to #{person.name}", replace_person_name_entries_path, method: :post, params: { name: item[:name], replacement: person.name }, form: { data: { turbo: false } } %>
+              <%= button_to "Change all to #{person.name}", replace_person_name_entries_path, method: :post, params: { name: item[:name], replacement: person.name, draft_id: @persistent_draft_id }, form: { data: { turbo: false } } %>
             </li>
           <% end %>
           <li>
-            <%= button_to "Create #{item[:name]}", create_person_entries_path, method: :post, params: { name: item[:name] }, form: { data: { turbo: false } } %>
+            <%= button_to "Create #{item[:name]}", create_person_entries_path, method: :post, params: { name: item[:name], draft_id: @persistent_draft_id }, form: { data: { turbo: false } } %>
           </li>
         </ul>
       <% else %>
-        <%= button_to "Create #{item[:name]}", create_person_entries_path, method: :post, params: { name: item[:name] }, form: { data: { turbo: false } } %>
+        <%= button_to "Create #{item[:name]}", create_person_entries_path, method: :post, params: { name: item[:name], draft_id: @persistent_draft_id }, form: { data: { turbo: false } } %>
       <% end %>
     <% elsif item[:result].ambiguous? %>
       <p>"<%= item[:name] %>" matches multiple people. Pick which person you meant:</p>
       <ul class="resolution-options">
         <% item[:result].people.each do |person| %>
           <li>
-            <%= button_to "Use #{person.name}", resolve_person_entries_path, method: :post, params: { name: item[:name], person_id: person.id }, form: { data: { turbo: false } } %>
+            <%= button_to "Use #{person.name}", resolve_person_entries_path, method: :post, params: { name: item[:name], person_id: person.id, draft_id: @persistent_draft_id }, form: { data: { turbo: false } } %>
           </li>
         <% end %>
       </ul>
@@ -87,14 +87,21 @@
 <div class="preview-actions">
   <% if @draft.valid_for_save? %>
     <% if @entry %>
-      <%= button_to "Save entry", entry_path(@entry), method: :patch, class: "button-primary", form: { data: { turbo: false } } %>
+      <%= button_to "Save entry", entry_path(@entry), method: :patch, class: "button-primary", params: { draft_id: @persistent_draft_id, lock_version: @persistent_draft&.lock_version }, form: { data: { turbo: false } } %>
     <% else %>
-      <%= button_to "Save entry", entries_path, method: :post, class: "button-primary", form: { data: { turbo: false } } %>
+      <%= button_to "Save entry", entries_path, method: :post, class: "button-primary", params: { draft_id: @persistent_draft_id, lock_version: @persistent_draft&.lock_version }, form: { data: { turbo: false } } %>
     <% end %>
   <% else %>
     <p class="hint">Save will be available once all people are resolved and validation passes.</p>
   <% end %>
 
-  <%= link_to "Edit entry", @entry ? edit_entry_path(@entry) : new_entry_path, class: "button-secondary" %>
-  <%= button_to "Discard draft", discard_draft_entries_path, method: :delete, class: "button-danger", form: { data: { turbo: false, turbo_confirm: "Discard this draft?" } } %>
+  <%= link_to "Edit entry",
+              @entry ? edit_entry_path(@entry) : new_entry_path(draft_id: @persistent_draft_id),
+              class: "button-secondary" %>
+  <%= button_to "Discard draft",
+                discard_draft_entries_path,
+                method: :delete,
+                class: "button-danger",
+                params: { draft_id: @persistent_draft_id, lock_version: @persistent_draft&.lock_version },
+                form: { data: { turbo: false, turbo_confirm: "Discard this draft?" } } %>
 </div>

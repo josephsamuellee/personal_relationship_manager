@@ -1,6 +1,6 @@
 <h1>Drafts</h1>
 
-<% if @draft %>
+<% if @draft && @persistent_draft %>
   <div class="preview-status <%= @draft.valid_for_save? ? 'preview-status-ready' : 'preview-status-needs-attention' %>">
     <% if @draft.valid_for_save? %>
       <p><strong>Ready to save.</strong> This draft can be published as an entry.</p>
@@ -20,11 +20,18 @@
   </div>
 
   <div class="preview-actions">
-    <%= link_to "Continue preview", preview_entries_path, class: "button-primary" %>
-    <%= link_to "Edit entry", @draft.entry_id.present? ? edit_entry_path(@draft.entry_id) : new_entry_path, class: "button-secondary" %>
-    <%= button_to "Discard draft", discard_draft_entries_path, method: :delete, class: "button-danger", form: { data: { turbo: false, turbo_confirm: "Discard this draft?" } } %>
+    <%= link_to "Continue preview", preview_entries_path(draft_id: @persistent_draft.id), class: "button-primary" %>
+    <%= link_to "Edit entry",
+                @draft.entry_id.present? ? edit_entry_path(@draft.entry_id) : new_entry_path(draft_id: @persistent_draft.id),
+                class: "button-secondary" %>
+    <%= button_to "Discard draft",
+                  discard_draft_entries_path,
+                  method: :delete,
+                  class: "button-danger",
+                  params: { draft_id: @persistent_draft.id, lock_version: @persistent_draft.lock_version },
+                  form: { data: { turbo: false, turbo_confirm: "Discard this draft?" } } %>
   </div>
 <% else %>
-  <p class="hint">No draft in progress. Drafts are saved automatically when you preview a new or edited entry.</p>
+  <p class="hint">No draft in progress. Drafts are saved when Save requires person resolution or when you stage a preview.</p>
   <%= link_to "New entry", new_entry_path, class: "button-primary" %>
 <% end %>

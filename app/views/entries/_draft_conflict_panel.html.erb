@@ -1,0 +1,20 @@
+<div class="draft-conflict-panel flash flash-alert"
+     data-entry-draft-autosave-target="conflictPanel"
+     hidden>
+  <p>This draft changed in another tab or device. Your local Markdown is preserved below for copying.</p>
+  <p>
+    <button type="button"
+            class="button-secondary"
+            data-action="entry-draft-autosave#reloadServerVersion">
+      Reload server version
+    </button>
+  </p>
+  <div class="field">
+    <label for="draft-local-copy">Your local Markdown (read-only)</label>
+    <textarea id="draft-local-copy"
+              class="draft-local-copy"
+              rows="8"
+              readonly
+              data-entry-draft-autosave-target="localCopy"></textarea>
+  </div>
+</div>

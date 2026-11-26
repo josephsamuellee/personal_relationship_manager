@@ -3,6 +3,7 @@
 pin "application"
 pin "date_parse"
 pin "markdown_insert"
+pin "entry_draft_autosave_helpers"
 pin "overtype", to: "overtype.esm.js" # OverType 2.7.0 (vendored)
 pin "@hotwired/turbo-rails", to: "turbo.min.js"
 pin "@hotwired/stimulus", to: "stimulus.min.js"

@@ -77,6 +77,44 @@
     <% end %>
   </section>
 
+  <section class="config-section" id="unfinished-drafts">
+    <h2>Unfinished Drafts</h2>
+    <% if @unfinished_drafts.blank? %>
+      <p class="placeholder">No unfinished drafts.</p>
+    <% else %>
+      <table class="stats-table unfinished-drafts-table">
+        <thead>
+          <tr>
+            <th scope="col">Title</th>
+            <th scope="col">Date</th>
+            <th scope="col">Last modified</th>
+            <th scope="col">Kind</th>
+            <th scope="col">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @unfinished_drafts.each do |draft| %>
+            <tr data-draft-id="<%= draft.id %>">
+              <td><%= draft.display_title %></td>
+              <td><%= draft.raw_date.presence || "—" %></td>
+              <td><%= draft.content_updated_at&.in_time_zone&.strftime("%d %b %Y %H:%M") %></td>
+              <td><%= draft.kind_label %></td>
+              <td class="unfinished-draft-actions">
+                <%= link_to "Resume", edit_entry_draft_path(draft), class: "button-secondary" %>
+                <%= button_to "Discard",
+                              discard_draft_entries_path,
+                              method: :delete,
+                              class: "button-danger",
+                              params: { draft_id: draft.id, lock_version: draft.lock_version, return_to: "config" },
+                              form: { data: { turbo: false, turbo_confirm: "Discard this draft?" } } %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% end %>
+  </section>
+
   <section class="config-section">
     <h2>Favorite People</h2>
     <p class="placeholder"><em>Favorite People homepage slots (positions 1, 2, and 3) are set on each Person page using the Favorite People dropdown, then saved with that page. They cannot be edited here.</em></p>
