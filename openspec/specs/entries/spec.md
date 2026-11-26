@@ -26,7 +26,7 @@ The application MUST store user-authored Markdown. Rendered HTML MUST NOT become
 - **THEN** the displayed HTML MUST be produced from stored Markdown and MUST be sanitized
 
 ### Requirement: Explicit creation workflow
-Entry creation MUST use an explicit validation and save workflow conceptually progressing through draft edit, date parse, people parse, tag parse, person resolution when needed, validation, and persist. New Entry MUST present a primary Save control instead of a mandatory Preview control. When Save succeeds with a fully valid draft, the Entry MUST persist in that request without requiring a separate Preview step. When Save encounters unresolved or ambiguous people, the application MUST stage the draft and reuse the existing person-resolution workflow before persistence. The final Entry MUST NOT be persisted merely because a draft was staged for resolution.
+Entry creation MUST use an explicit validation and save workflow conceptually progressing through draft edit, date parse, people parse, tag parse, person resolution when needed, validation, and persist. New Entry MUST present a primary Save control instead of a mandatory Preview control. When Save succeeds with a fully valid draft, the Entry MUST persist in that request without requiring a separate Preview step. When Save encounters unresolved or ambiguous people, the application MUST stage a durable server-side draft and reuse the existing person-resolution workflow before persistence. The final Entry MUST NOT be persisted merely because a draft was staged for resolution. Autosave of unfinished drafts MUST NOT replace explicit Save and MUST NOT persist the final Entry by itself.
 
 #### Scenario: Preview does not persist
 - **WHEN** the user reaches the person-resolution or staged-draft step without confirming save
@@ -39,6 +39,17 @@ Entry creation MUST use an explicit validation and save workflow conceptually pr
 #### Scenario: Staged resolution does not persist by itself
 - **WHEN** the user reaches the person-resolution workflow because of unresolved people and has not confirmed Save
 - **THEN** the system MUST NOT persist the final Entry solely because the draft was staged
+
+#### Scenario: Autosave does not publish
+- **WHEN** autosave writes an unfinished draft that would be valid for Save
+- **THEN** the system MUST NOT create the committed Entry until the user explicitly Saves
+
+### Requirement: Explicit Save includes latest editor content
+Explicit Save MUST submit the current editor field values, including meaningful changes not yet acknowledged by autosave. The client SHOULD flush or include pending edits so Save is not limited to the last autosaved snapshot.
+
+#### Scenario: Save before debounce completes
+- **WHEN** the user edits the body and clicks Save before the 3 second autosave debounce completes
+- **THEN** the Save request MUST include the latest editor body and MUST apply normal validation, resolution, or persistence rules to that content
 
 ### Requirement: Explicit title
 The user MUST provide an Entry title. The system MUST NOT infer the title automatically from the body.
@@ -120,11 +131,11 @@ Edit Entry MUST present a primary Save control instead of a mandatory Preview co
 - **THEN** the existing Entry MUST remain valid, its Markdown content MUST be preserved, and unnecessary Markdown normalization MUST NOT occur
 
 ### Requirement: Person-resolution fallback on Save
-When Save encounters unknown or ambiguous person references, the application MUST reuse the existing Preview/person-resolution workflow without introducing inline resolution panels, autocomplete, or automatic Person creation.
+When Save encounters unknown or ambiguous person references, the application MUST reuse the existing Preview/person-resolution workflow without introducing inline resolution panels, autocomplete, or automatic Person creation. Staging MUST use durable server-side draft storage rather than embedding the full draft in a browser cookie session.
 
 #### Scenario: Unknown person
 - **WHEN** an Entry contains a wiki reference to a Person that does not exist and the user clicks Save
-- **THEN** the system MUST stage the draft without persisting, display the existing person-resolution UI, and allow resolution through existing functionality
+- **THEN** the system MUST stage a durable draft without persisting the Entry, display the existing person-resolution UI, and allow resolution through existing functionality
 
 #### Scenario: Ambiguous person
 - **WHEN** a wiki reference matches multiple existing People and the user clicks Save
@@ -136,7 +147,11 @@ When Save encounters unknown or ambiguous person references, the application MUS
 
 #### Scenario: Resolution completed then Save
 - **WHEN** an Entry was staged because of unresolved references and the user completes resolution then confirms Save
-- **THEN** the system MUST persist the resolved Entry, clear the staged draft according to existing session conventions, and redirect to the saved Entry
+- **THEN** the system MUST persist the resolved Entry, remove the corresponding durable unfinished draft, and redirect to the saved Entry
+
+#### Scenario: Long body requiring resolution
+- **WHEN** the user clicks Save on a draft whose Markdown body is approximately 4 KB or larger and at least one person reference is unresolved
+- **THEN** the application MUST stage the durable draft and show the resolution UI without failing due to browser cookie capacity limits
 
 ### Requirement: Validation precedence on Save
 When unresolved person references and ordinary validation errors both exist, the existing person-resolution UI MUST be shown first. Ordinary validation errors MUST still be preserved and MUST block persistence until both concerns succeed.
@@ -154,36 +169,44 @@ When unresolved person references and ordinary validation errors both exist, the
 - **THEN** the application MUST NOT persist and MUST display the existing validation error for the missing required person
 
 ### Requirement: Session draft compatibility for resolution
-The existing session-based draft workflow MUST remain available for person resolution and for Save after resolution. Successful direct Saves SHOULD avoid unnecessary staging and MUST clear stale staged draft data on success.
+The durable unfinished-draft workflow MUST remain available for person resolution and for Save after resolution. Successful direct Saves SHOULD avoid unnecessary staging when no draft row is required and MUST remove the corresponding durable draft on success. The requirement name remains for baseline continuity; behavior refers to server-side drafts rather than cookie session payloads.
 
 #### Scenario: Successful direct Save clears staged draft
 - **WHEN** an Entry passes all validation and Save completes
-- **THEN** stale staged draft data associated with the operation MUST be cleared and the user MUST be redirected to the Entry detail page
+- **THEN** the corresponding durable draft MUST be removed when one exists and the user MUST be redirected to the Entry detail page
 
 #### Scenario: Failed Save requiring resolution stages draft
 - **WHEN** an Entry contains unresolved people and the user clicks Save
-- **THEN** the complete draft MUST be staged using existing session conventions and the resolution UI MUST receive all necessary information
+- **THEN** the complete submitted draft MUST be stored as a durable server-side draft and the resolution UI MUST receive all necessary information via that draft identity
 
-### Requirement: Single session draft limitation
-This change MUST NOT introduce multi-draft session storage, new draft tables, or draft identifiers solely for concurrent tabs. Concurrent draft workflows across tabs MAY interfere under the current single-session-draft behavior.
+### Requirement: Draft cleanup with Entry persistence
+When a valid draft is persisted as a committed Entry, removal of the corresponding unfinished draft MUST occur in the same transactional boundary as Entry persistence where feasible so a successful Save does not leave a stale unfinished draft for that work.
 
-#### Scenario: Concurrent tabs share one session draft
-- **WHEN** two browser tabs each stage Entry drafts in the same session
-- **THEN** the later staged draft MAY overwrite the earlier one according to existing single-session-draft behavior
+#### Scenario: Atomic success path
+- **WHEN** Save persists a new or updated Entry from a durable draft successfully
+- **THEN** that unfinished draft MUST NOT remain queryable as unfinished after the transaction commits
 
 ### Requirement: Duplicate submission protection on Save
-Save MUST use best-effort frontend protection against accidental repeated Save actions while a request is in flight. This change MUST NOT introduce server-side idempotency tokens, new database columns, or request-deduplication services.
+Save MUST use best-effort frontend protection against accidental repeated Save actions while a request is in flight. This change MUST NOT introduce server-side Entry idempotency tokens or request-deduplication services for committed Entry Save. Unfinished-draft revision columns and client create identifiers used solely for durable draft concurrency and create idempotency are allowed.
 
 #### Scenario: Repeated Save click while processing
 - **WHEN** the user clicks Save and the request is being processed
 - **THEN** the Save control SHOULD become temporarily disabled and SHOULD provide a visible saving state where supported by existing Turbo behavior
 
 ### Requirement: Concurrent edit last-write-wins
-Concurrent edits of the same Entry MUST preserve existing last-write-wins update semantics. This change MUST NOT introduce optimistic locking, conflict dialogs, or version tracking.
+Concurrent edits of the same committed Entry MUST preserve existing last-write-wins update semantics for the Entry record. Unfinished drafts for an Entry MUST use optimistic conflict detection and MUST NOT silently overwrite a newer unfinished draft revision. This change MUST NOT introduce committed Entry revision history, OT, or CRDT merging.
 
 #### Scenario: Concurrent edits
 - **WHEN** two browser tabs edit the same Entry and both submit valid changes
 - **THEN** existing update semantics MUST apply and the later successful update MAY overwrite earlier changes
+
+#### Scenario: Concurrent committed Entry updates
+- **WHEN** two browser tabs edit the same Entry and both submit valid changes without an intervening unfinished-draft conflict
+- **THEN** existing Entry update semantics MUST apply and the later successful Entry update MAY overwrite earlier committed changes
+
+#### Scenario: Concurrent unfinished draft updates
+- **WHEN** two editors autosave the same unfinished draft and the second uses a stale revision
+- **THEN** the stale write MUST be rejected and the newer draft revision MUST remain
 
 ### Requirement: Persistence failure reporting
 When persistence of a valid draft fails, the application MUST report the failure, MUST NOT present the Entry as successfully saved, and MUST NOT leave partially applied Entry relationships from that attempt.
@@ -191,6 +214,20 @@ When persistence of a valid draft fails, the application MUST report the failure
 #### Scenario: Persistence failure
 - **WHEN** Save attempts to persist an Entry and persistence fails
 - **THEN** the application MUST report the failure, MUST NOT present success, and MUST NOT leave partially applied Entry relationships
+
+### Requirement: New Entry always starts fresh
+The standard New Entry entry point MUST always start a fresh Entry workflow. It MUST NOT automatically load an existing unfinished draft. Resume of unfinished New drafts MUST occur through the floating Drafts control, Config management, or a draft-specific editor URL.
+
+#### Scenario: New ignores other drafts
+- **WHEN** unfinished New drafts exist and the user opens New Entry via Add Entry
+- **THEN** the form MUST start empty of those drafts' content (aside from normal defaults such as today's date) until the user edits or explicitly resumes a draft elsewhere
+
+### Requirement: Edit Entry resumes unfinished draft
+When the user opens Edit Entry and an unfinished draft exists for that Entry, the editor MUST resume that draft's fields. When none exists, the editor MUST seed from the committed Entry without creating a draft until a meaningful modification occurs.
+
+#### Scenario: Resume edit draft
+- **WHEN** draft D exists for Entry E and the user opens Edit for E
+- **THEN** title, date, and Markdown MUST come from D
 
 ### Requirement: New Entry body seed from request
 When New Entry is opened with a body seed parameter representing Markdown text, and no conflicting staged session draft takes precedence, the Markdown body field MUST initialize to that exact text. The system MUST NOT persist an Entry solely because the body was seeded. Existing Save, validation, person-resolution, and Markdown editor behavior MUST remain unchanged.
