@@ -33,11 +33,22 @@ Canonical product terminology is Person, Entry, and Tag. Persistence-layer names
 - **THEN** it MUST use Entry terminology rather than exposing legacy persistence names as the product term
 
 ### Requirement: Global Add Entry control
-Normal application pages MUST expose an Add Entry control. The established UI places this as a floating control in the lower-right area. Selecting it MUST navigate to Entry creation. Floating controls MUST NOT permanently obscure page content.
+Normal application pages MUST expose an Add Entry control. The established UI places this as a floating control in the lower-right area. Selecting it MUST navigate to Entry creation as a fresh workflow that does not auto-load an existing unfinished draft. Floating controls MUST NOT permanently obscure page content.
 
 #### Scenario: Add Entry from homepage
 - **WHEN** the user selects the floating Add Entry control on a normal application page
-- **THEN** the application MUST navigate to Entry creation
+- **THEN** the application MUST navigate to Entry creation as a fresh workflow that does not auto-load an existing unfinished draft
+
+### Requirement: Floating Drafts resumes most recent
+When unfinished Entry drafts exist, the floating Drafts control MUST be visible and MUST resume the single most recently modified unfinished draft's editor directly without an intermediate draft-picker step in the standard workflow. When no unfinished drafts exist, the control MUST be hidden.
+
+#### Scenario: Floating control opens MRU draft
+- **WHEN** multiple unfinished drafts exist and the user clicks the floating Drafts control
+- **THEN** the application MUST open the editor for the draft with the latest meaningful modification time
+
+#### Scenario: Hidden when empty
+- **WHEN** no unfinished drafts exist
+- **THEN** the floating Drafts control MUST NOT be shown
 
 ### Requirement: Responsive core destinations
 Core functionality MUST remain usable on landscape desktop and portrait or narrow displays. Responsive presentation MAY differ. Behavior and accessible destinations MUST remain equivalent for Favorite People, Search, Add Entry, Recent Timeline, and People navigation.

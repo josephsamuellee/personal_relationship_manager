@@ -10,8 +10,10 @@ class EntriesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "form.entry-form[action=?][method=?]", entries_path, "post"
+    assert_select "form.entry-form[data-controller*='entry-draft-autosave']"
     assert_select "input[type=submit][value=?][data-turbo-submits-with=?]", "Save", "Saving..."
     assert_select "input[type=submit][value=?]", "Preview", count: 0
+    assert_select "[data-entry-draft-autosave-target=status]"
   end
 
   test "edit entry form patches Save without a Preview button" do
@@ -44,7 +46,7 @@ class EntriesControllerTest < ActionDispatch::IntegrationTest
 
     entry = Entry.order(:id).last
     assert_redirected_to entry_path(entry)
-    assert_nil session[:entry_draft]
+    assert_equal 0, PersistentEntryDraft.count
 
     follow_redirect!
     assert_response :success
@@ -73,7 +75,7 @@ class EntriesControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_redirected_to entry_path(entry)
-    assert_nil session[:entry_draft]
+    assert_equal 0, PersistentEntryDraft.count
     entry.reload
     assert_equal "Updated title", entry.title
     assert_equal Date.new(2020, 3, 16), entry.occurred_on
@@ -113,32 +115,36 @@ class EntriesControllerTest < ActionDispatch::IntegrationTest
         body_markdown: "Tea with [[Ada Lovelace]]."
       }
     }
-    assert_redirected_to preview_entries_path
-    assert session[:entry_draft].present?
+    draft = PersistentEntryDraft.order(:id).last
+    assert_redirected_to preview_entries_path(draft_id: draft.id)
+    assert_equal 1, PersistentEntryDraft.count
 
     assert_difference -> { Entry.count }, 1 do
-      post entries_path
+      post entries_path, params: { draft_id: draft.id }
     end
 
     entry = Entry.order(:id).last
     assert_redirected_to entry_path(entry)
-    assert_nil session[:entry_draft]
+    assert_equal 0, PersistentEntryDraft.count
     assert_equal "Staged tea", entry.title
   end
 
   test "unknown person on direct save stages draft and redirects to resolution UI" do
     assert_no_difference -> { Entry.count } do
-      post entries_path, params: {
-        entry: {
-          title: "Mystery meeting",
-          raw_date: "28 Sep 2026",
-          body_markdown: "Met [[Unknown Person]]."
+      assert_difference -> { PersistentEntryDraft.count }, 1 do
+        post entries_path, params: {
+          entry: {
+            title: "Mystery meeting",
+            raw_date: "28 Sep 2026",
+            body_markdown: "Met [[Unknown Person]]."
+          }
         }
-      }
+      end
     end
 
-    assert_redirected_to preview_entries_path
-    assert session[:entry_draft].present?
+    draft = PersistentEntryDraft.order(:id).last
+    assert_redirected_to preview_entries_path(draft_id: draft.id)
+    refute session[:entry_draft].present?
     follow_redirect!
     assert_select ".resolution-panel", text: /No person named "Unknown Person"/
   end
@@ -159,7 +165,8 @@ class EntriesControllerTest < ActionDispatch::IntegrationTest
       }
     end
 
-    assert_redirected_to preview_entries_path
+    draft = PersistentEntryDraft.order(:id).last
+    assert_redirected_to preview_entries_path(draft_id: draft.id)
     follow_redirect!
     assert_select ".resolution-panel", text: /matches multiple people/
   end
@@ -183,8 +190,9 @@ class EntriesControllerTest < ActionDispatch::IntegrationTest
       }
     end
 
-    assert_redirected_to preview_entries_path
-    assert_equal entry.id, session[:entry_draft].with_indifferent_access[:entry_id]
+    draft = PersistentEntryDraft.order(:id).last
+    assert_redirected_to preview_entries_path(draft_id: draft.id)
+    assert_equal entry.id, draft.entry_id
   end
 
   test "validation failure without unresolved people re-renders new form" do
@@ -199,7 +207,7 @@ class EntriesControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_response :unprocessable_entity
-    assert_nil session[:entry_draft]
+    assert_equal 0, PersistentEntryDraft.count
     assert_select "form.entry-form"
     assert_select "li", text: /Title cannot be blank/
     assert_select "textarea[name='entry[body_markdown]']", text: "Tea with [[Ada Lovelace]]."
@@ -253,11 +261,12 @@ class EntriesControllerTest < ActionDispatch::IntegrationTest
       }
     end
 
-    assert_redirected_to preview_entries_path
-    draft = session[:entry_draft].with_indifferent_access
-    assert_includes draft[:body_markdown], "[[Unknown Person]]"
-    assert_equal "not-a-date", draft[:raw_date]
-    assert draft[:validation_errors].any?
+    record = PersistentEntryDraft.order(:id).last
+    assert_redirected_to preview_entries_path(draft_id: record.id)
+    assert_includes record.body_markdown, "[[Unknown Person]]"
+    assert_equal "not-a-date", record.raw_date
+    draft = EntryDraft.from_record(record)
+    assert draft.validation_errors.any?
 
     follow_redirect!
     assert_select ".resolution-panel"
@@ -309,19 +318,21 @@ class EntriesControllerTest < ActionDispatch::IntegrationTest
         body_markdown: "Met [[New Friend]]."
       }
     }
-    assert_redirected_to preview_entries_path
+    draft = PersistentEntryDraft.order(:id).last
+    assert_redirected_to preview_entries_path(draft_id: draft.id)
 
-    post create_person_entries_path, params: { name: "New Friend" }
-    assert_redirected_to preview_entries_path
+    post create_person_entries_path, params: { name: "New Friend", draft_id: draft.id }
+    assert_redirected_to preview_entries_path(draft_id: draft.id)
     assert Person.exists?(name: "New Friend")
 
     assert_difference -> { Entry.count }, 1 do
-      post entries_path
+      assert_difference -> { PersistentEntryDraft.count }, -1 do
+        post entries_path, params: { draft_id: draft.id }
+      end
     end
 
     entry = Entry.order(:id).last
     assert_redirected_to entry_path(entry)
-    assert_nil session[:entry_draft]
     assert_equal "New Friend", entry.primary_person.name
   end
 
@@ -364,7 +375,7 @@ class EntriesControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "new entry prefers session draft over occurred on query param" do
+  test "new entry with draft_id resumes durable draft over occurred on query param" do
     travel_to Time.zone.local(2026, 9, 28, 12, 0, 0) do
       post preview_entries_path, params: {
         entry: {
@@ -373,8 +384,9 @@ class EntriesControllerTest < ActionDispatch::IntegrationTest
           body_markdown: "[[Andrew]]"
         }
       }
+      draft = PersistentEntryDraft.order(:id).last
 
-      get new_entry_path(occurred_on: "2026-09-25")
+      get new_entry_path(occurred_on: "2026-09-25", draft_id: draft.id)
 
       assert_response :success
       assert_select "input[name='entry[raw_date]'][value=?]", "10 Sep 2026"
@@ -408,7 +420,7 @@ class EntriesControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "session draft takes precedence over body seed" do
+  test "durable draft_id takes precedence over body seed" do
     post preview_entries_path, params: {
       entry: {
         title: "Draft title",
@@ -416,8 +428,9 @@ class EntriesControllerTest < ActionDispatch::IntegrationTest
         body_markdown: "Existing draft body"
       }
     }
+    draft = PersistentEntryDraft.order(:id).last
 
-    get new_entry_path(occurred_on: "2026-11-12", body: "Dinner with Jerry")
+    get new_entry_path(occurred_on: "2026-11-12", body: "Dinner with Jerry", draft_id: draft.id)
 
     assert_response :success
     assert_select "textarea[name='entry[body_markdown]']", text: "Existing draft body"
@@ -524,7 +537,7 @@ class EntriesControllerTest < ActionDispatch::IntegrationTest
 
     get new_entry_path
     assert_response :success
-    assert_select "form.entry-form[data-controller=?]", "recent-people"
+    assert_select "form.entry-form[data-controller*='recent-people']"
     assert_select ".recent-people" do
       assert_select "button.recent-people-button[type=button]", count: 2
       assert_select "button.recent-people-button", text: "Newer Friend"
@@ -569,5 +582,258 @@ class EntriesControllerTest < ActionDispatch::IntegrationTest
     entry = Entry.order(:id).last
     assert_equal "Met [[Ada Lovelace]].", entry.body_markdown
     assert_redirected_to entry_path(entry)
+  end
+
+  [1, 4, 16, 64].each do |kilobytes|
+    test "long unresolved save of #{kilobytes}KB stages durable draft without cookie payload" do
+      chinese = "繁體中文測試"
+      filler = ("a" * ((kilobytes * 1024) - 80))
+      body = "Met [[Unknown Person]].\n\n#{chinese}\n#{filler}"
+
+      assert_no_difference -> { Entry.count } do
+        assert_difference -> { PersistentEntryDraft.count }, 1 do
+          post entries_path, params: {
+            entry: {
+              title: "Long entry #{kilobytes}KB",
+              raw_date: "28 Sep 2026",
+              body_markdown: body
+            }
+          }
+        end
+      end
+
+      assert_response :redirect
+      assert_nil session[:entry_draft]
+      record = PersistentEntryDraft.order(:id).last
+      assert_equal body, record.body_markdown
+      assert_includes record.body_markdown, chinese
+      assert_redirected_to preview_entries_path(draft_id: record.id)
+    end
+  end
+
+  test "long durable draft preserves exact markdown through resolution save" do
+    chinese = "繁體中文測試"
+    body = "Met [[New Friend]].\n\n#{chinese}\n" + ("字" * 2000)
+
+    post entries_path, params: {
+      entry: {
+        title: "Unicode long",
+        raw_date: "28 Sep 2026",
+        body_markdown: body
+      }
+    }
+    draft = PersistentEntryDraft.order(:id).last
+    assert_equal body, draft.body_markdown
+
+    post create_person_entries_path, params: { name: "New Friend", draft_id: draft.id }
+    assert_difference -> { Entry.count }, 1 do
+      post entries_path, params: { draft_id: draft.id }
+    end
+
+    entry = Entry.order(:id).last
+    assert_equal body, entry.body_markdown
+    assert_equal 0, PersistentEntryDraft.count
+  end
+
+  test "floating drafts control appears when durable draft exists and hides after discard" do
+    post entries_path, params: {
+      entry: {
+        title: "Needs resolve",
+        raw_date: "28 Sep 2026",
+        body_markdown: "Met [[Ghost]]."
+      }
+    }
+    draft = PersistentEntryDraft.order(:id).last
+
+    get new_entry_path
+    assert_select ".floating-actions a[href=?]", edit_entry_draft_path(draft), text: "Drafts"
+
+    delete discard_draft_entries_path, params: { draft_id: draft.id }
+    follow_redirect!
+    assert_select ".floating-actions a", text: "Drafts", count: 0
+  end
+
+  test "floating drafts resumes most recently modified draft" do
+    older = PersistentEntryDraft.create!(
+      title: "Older",
+      raw_date: "01 Jan 2020",
+      body_markdown: "[[Ada Lovelace]]",
+      content_updated_at: 2.hours.ago
+    )
+    newer = PersistentEntryDraft.create!(
+      title: "Newer",
+      raw_date: "02 Jan 2020",
+      body_markdown: "[[Ada Lovelace]]",
+      content_updated_at: 1.hour.ago
+    )
+
+    get homepage_path
+    assert_select ".floating-actions a[href=?]", edit_entry_draft_path(newer), text: "Drafts"
+    assert_select ".floating-actions a[href=?]", edit_entry_draft_path(older), count: 0
+  end
+
+  test "entries drafts path redirects to MRU editor" do
+    draft = PersistentEntryDraft.create!(
+      title: "MRU",
+      raw_date: "01 Jan 2020",
+      body_markdown: "[[Ada Lovelace]]"
+    )
+
+    get drafts_entries_path
+    assert_redirected_to edit_entry_draft_path(draft)
+  end
+
+  test "edit entry resumes unfinished draft without bumping content_updated_at" do
+    entry = create_entry!(
+      title: "Existing",
+      occurred_on: Date.new(2020, 3, 15),
+      primary: @person,
+      body: "Note with [[Ada Lovelace]]."
+    )
+    draft = PersistentEntryDraft.create!(
+      entry: entry,
+      title: "Draft title",
+      raw_date: "16 Mar 2020",
+      body_markdown: "Draft body [[Ada Lovelace]].",
+      content_updated_at: Time.zone.parse("2020-03-15 12:00:00")
+    )
+    original_updated = draft.content_updated_at
+
+    get edit_entry_path(entry)
+    assert_response :success
+    assert_select "input[name='entry[title]'][value=?]", "Draft title"
+    assert_select "textarea[name='entry[body_markdown]']", text: "Draft body [[Ada Lovelace]]."
+    assert_equal original_updated.to_i, draft.reload.content_updated_at.to_i
+  end
+
+  test "changed entry warning appears on edit resume and save still overwrites" do
+    entry = create_entry!(
+      title: "Existing",
+      occurred_on: Date.new(2020, 3, 15),
+      primary: @person,
+      body: "Note with [[Ada Lovelace]]."
+    )
+    draft = PersistentEntryDraft.create!(
+      entry: entry,
+      title: "Draft title",
+      raw_date: "15 Mar 2020",
+      body_markdown: "Draft [[Ada Lovelace]].",
+      base_entry_updated_at: entry.updated_at - 1.hour,
+      content_updated_at: Time.current
+    )
+
+    get edit_entry_path(entry)
+    assert_response :success
+    assert_match(/changed after this draft was started/i, response.body)
+
+    patch entry_path(entry), params: {
+      entry: {
+        entry_id: entry.id,
+        draft_id: draft.id,
+        title: "Draft title",
+        raw_date: "15 Mar 2020",
+        body_markdown: "Draft [[Ada Lovelace]]."
+      }
+    }
+    assert_redirected_to entry_path(entry)
+    assert_match(/had changed/i, flash[:notice].to_s)
+    assert_equal "Draft [[Ada Lovelace]].", entry.reload.body_markdown
+    assert_equal 0, PersistentEntryDraft.where(id: draft.id).count
+  end
+
+  test "orphaned edit draft requires confirm before creating a new entry" do
+    draft = PersistentEntryDraft.create!(
+      title: "Orphan",
+      raw_date: "15 Mar 2020",
+      body_markdown: "Hello [[Ada Lovelace]].",
+      base_entry_updated_at: 1.day.ago,
+      content_updated_at: Time.current
+    )
+
+    assert_no_difference -> { Entry.count } do
+      post entries_path, params: {
+        entry: {
+          draft_id: draft.id,
+          title: "Orphan",
+          raw_date: "15 Mar 2020",
+          body_markdown: "Hello [[Ada Lovelace]]."
+        }
+      }
+    end
+    assert_response :unprocessable_entity
+    assert_match(/original Entry no longer exists/i, response.body)
+
+    assert_difference -> { Entry.count }, 1 do
+      post entries_path, params: {
+        entry: {
+          draft_id: draft.id,
+          title: "Orphan",
+          raw_date: "15 Mar 2020",
+          body_markdown: "Hello [[Ada Lovelace]].",
+          confirm_create_new_entry: "1"
+        }
+      }
+    end
+    assert_redirected_to entry_path(Entry.order(:id).last)
+    assert_equal 0, PersistentEntryDraft.where(id: draft.id).count
+  end
+
+  test "two independent new drafts coexist and discard removes only one" do
+    first = PersistentEntryDraft.create!(
+      title: "First",
+      raw_date: "01 Jan 2020",
+      body_markdown: "[[Ada Lovelace]] one",
+      content_updated_at: 2.hours.ago
+    )
+    second = PersistentEntryDraft.create!(
+      title: "Second",
+      raw_date: "02 Jan 2020",
+      body_markdown: "[[Ada Lovelace]] two",
+      content_updated_at: 1.hour.ago
+    )
+
+    get new_entry_path
+    title = css_select("input[name='entry[title]']").first
+    assert title["value"].blank?
+
+    delete discard_draft_entries_path, params: { draft_id: first.id }
+    assert PersistentEntryDraft.exists?(second.id)
+    refute PersistentEntryDraft.exists?(first.id)
+  end
+
+  test "body_markdown params are filtered from logs" do
+    secret_body = "SECRET_JOURNAL_BODY_SHOULD_NOT_APPEAR_IN_LOGS [[Unknown Person]]"
+    io = StringIO.new
+    previous = Rails.logger
+    Rails.logger = ActiveSupport::Logger.new(io)
+
+    begin
+      post entries_path, params: {
+        entry: {
+          title: "Logged",
+          raw_date: "28 Sep 2026",
+          body_markdown: secret_body
+        }
+      }
+    ensure
+      Rails.logger = previous
+    end
+
+    refute_includes io.string, "SECRET_JOURNAL_BODY_SHOULD_NOT_APPEAR_IN_LOGS"
+  end
+
+  test "unfinished drafts do not appear in entry search or homepage timeline" do
+    PersistentEntryDraft.create!(
+      title: "UniqueDraftOnlyTitleXYZ",
+      raw_date: "28 Sep 2026",
+      body_markdown: "UniqueDraftOnlyBodyXYZ [[Nobody]]"
+    )
+
+    results = SearchService.new("UniqueDraftOnlyTitleXYZ").results
+    assert_empty results[:entries]
+
+    get homepage_path
+    assert_response :success
+    refute_includes response.body, "UniqueDraftOnlyTitleXYZ"
   end
 end

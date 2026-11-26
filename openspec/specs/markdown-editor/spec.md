@@ -154,3 +154,25 @@ The Markdown editor MUST NOT add autocomplete, chips, automatic linking UI, or c
 #### Scenario: Person About has no Recent People UI
 - **WHEN** the user opens a Person page About editor
 - **THEN** the About editor MUST NOT present the Entry Recent People quick-insert section
+
+### Requirement: Long Markdown through resolution
+Entry Markdown submitted through the shared editor MUST remain exactly preservable when Save stages a durable unfinished draft for person resolution, including bodies around 1 KB, 4 KB, 16 KB, and 64 KB and multibyte Unicode such as Traditional Chinese. Staging MUST NOT fail solely because of browser cookie capacity.
+
+#### Scenario: Large unresolved body preserves Markdown
+- **WHEN** the user submits Save from the Entry editor with an unresolved person reference and a Markdown body of approximately 16 KB including Traditional Chinese characters
+- **THEN** the durable draft MUST retain that exact Markdown string for Preview and later Save
+
+#### Scenario: Large valid body still saves
+- **WHEN** the user submits Save from the Entry editor with a fully valid draft whose Markdown body is approximately 64 KB and all people are recognized
+- **THEN** the Entry MUST persist with that exact Markdown and MUST NOT require cookie-based draft staging
+
+### Requirement: Autosave observes Entry editor input
+On New Entry and Edit Entry, meaningful Markdown edits made through the shared editor (including OverType-enhanced input and Recent People insertions that change the body) MUST mark the Entry draft dirty for autosave. Person About editors MUST NOT gain Entry unfinished-draft autosave behavior from this requirement.
+
+#### Scenario: OverType edit marks dirty
+- **WHEN** the user types in the Entry body editor and pauses for the autosave debounce
+- **THEN** the durable Entry draft MUST receive the updated Markdown via autosave
+
+#### Scenario: Person About unchanged
+- **WHEN** the user edits Person About Markdown
+- **THEN** that editing MUST NOT create or update an unfinished Entry draft through Entry autosave behavior

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_11_07_213720) do
+ActiveRecord::Schema[7.2].define(version: 2026_11_26_020001) do
   create_table "entries", force: :cascade do |t|
     t.string "title", null: false
     t.date "occurred_on", null: false
@@ -20,6 +20,22 @@ ActiveRecord::Schema[7.2].define(version: 2026_11_07_213720) do
     t.datetime "updated_at", null: false
     t.index ["occurred_on"], name: "index_entries_on_occurred_on"
     t.index ["primary_person_id"], name: "index_entries_on_primary_person_id"
+  end
+
+  create_table "entry_drafts", force: :cascade do |t|
+    t.integer "entry_id"
+    t.string "title"
+    t.string "raw_date"
+    t.text "body_markdown", default: "", null: false
+    t.text "person_selections", default: "{}", null: false
+    t.integer "lock_version", default: 0, null: false
+    t.datetime "content_updated_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.datetime "base_entry_updated_at"
+    t.string "client_create_id"
+    t.index ["client_create_id"], name: "index_entry_drafts_on_client_create_id", unique: true
+    t.index ["entry_id"], name: "index_entry_drafts_on_entry_id", unique: true
   end
 
   create_table "entry_people", force: :cascade do |t|
@@ -73,6 +89,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_11_07_213720) do
   end
 
   add_foreign_key "entries", "people", column: "primary_person_id"
+  add_foreign_key "entry_drafts", "entries", on_delete: :nullify
   add_foreign_key "entry_people", "entries"
   add_foreign_key "entry_people", "people"
   add_foreign_key "entry_tags", "entries"

@@ -23,6 +23,8 @@ Rails.application.routes.draw do
     end
   end
 
+  resources :entry_drafts, only: [ :create, :update, :edit ]
+
   get "/search/entries", to: "search#entries", as: :search_entries
   get "/search", to: "search#show", as: :search
 
